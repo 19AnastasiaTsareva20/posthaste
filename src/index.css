@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Светлая тема/Light theme */
+  --background: #FAFBFC;
+  --surface: #FFFFFF;
+  --text-primary: #1A202C;
+  --text-secondary: #4A5568;
+  --border: #E2E8F0;
+  
+  /* Акценты/Accents */
+  --primary: #3889F2;
+  --success: #15B9A7;
+  --info: #94E1F2;
+  --danger: #F54364;
+}
+
+.dark {
+  /* Тёмная тема/Dark theme */
+  --background: #1A202C;
+  --surface: #2D3748;
+  --text-primary: #F7FAFC;
+  --text-secondary: #CBD5E0;
+  --border: #4A5568;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--background);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Плавные переходы/Smooth transitions */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Кастомный скроллбар/Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Режим чтения/Reading mode */
+.reading-mode {
+  filter: brightness(0.9);
+  background-color: #F8F9FA;
+}
+
+.dark .reading-mode {
+  filter: brightness(0.8);
+  background-color: #1E2329;
+}
