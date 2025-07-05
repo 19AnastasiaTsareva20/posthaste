@@ -1,20 +1,41 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import './App.css';
 import { Button, Card, ThemeToggle, WelcomeModal } from './components/ui';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { useWelcome } from './hooks/useWelcome';
+import { TestPage } from './pages/TestPage';
 
-function App() {
+function MainPage() {
   const { showWelcome, closeWelcome } = useWelcome();
 
   return (
-    <ThemeProvider>
+    <>
       <div className="min-h-screen bg-background dark:bg-dark-background transition-colors">
-        {/* Хэдер с основным градиентом/Header with main gradient */}
+        {/* Хэдер с навигацией/Header with navigation */}
         <header className="bg-gradient-header p-6">
           <div className="flex justify-between items-center max-w-7xl mx-auto">
-            <div>
-              <h1 className="text-3xl font-bold text-white">PostHaste</h1>
-              <p className="text-white/90 mt-2">Современная платформа для создания контента</p>
+            <div className="flex items-center gap-6">
+              <div>
+                <h1 className="text-3xl font-bold text-white">PostHaste</h1>
+                <p className="text-white/90 mt-2">Современная платформа для создания контента</p>
+              </div>
+              
+              {/* Навигация/Navigation */}
+              <nav className="hidden md:flex gap-4">
+                <Link 
+                  to="/" 
+                  className="text-white/80 hover:text-white transition-colors px-3 py-2 rounded"
+                >
+                  Главная
+                </Link>
+                <Link 
+                  to="/test" 
+                  className="text-white/80 hover:text-white transition-colors px-3 py-2 rounded"
+                >
+                  🧪 Тесты
+                </Link>
+              </nav>
             </div>
             <ThemeToggle />
           </div>
@@ -38,6 +59,11 @@ function App() {
                 <Button variant="outline" className="border-white text-white hover:bg-white/10">
                   Мои публикации
                 </Button>
+                <Link to="/test">
+                  <Button variant="outline" className="border-white text-white hover:bg-white/10">
+                    🧪 Тестовая страница
+                  </Button>
+                </Link>
               </div>
             </div>
           </Card>
@@ -93,6 +119,19 @@ function App() {
         {/* Модалка приветствия/Welcome modal */}
         <WelcomeModal isOpen={showWelcome} onClose={closeWelcome} />
       </div>
+    </>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<MainPage />} />
+          <Route path="/test" element={<TestPage />} />
+        </Routes>
+      </Router>
     </ThemeProvider>
   );
 }

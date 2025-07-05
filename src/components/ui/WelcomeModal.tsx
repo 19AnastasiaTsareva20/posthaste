@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from './Button';
 import { Card } from './Card';
 
@@ -46,7 +46,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) =
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <Card className="max-w-md w-full bg-gradient-dream text-white border-0">
+      <Card className="max-w-md w-full bg-gradient-accent text-white border-0">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4">{steps[currentStep].title}</h2>
           <p className="text-white/90 mb-6">{steps[currentStep].content}</p>
