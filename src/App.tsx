@@ -7,6 +7,7 @@ import { useWelcome } from './hooks/useWelcome';
 import { TestPage } from './pages/TestPage';
 import { CreateArticlePage } from './pages/CreateArticlePage';
 import { ArticlesPage } from './pages/ArticlesPage';
+import { ViewArticlePage } from './pages/ViewArticlePage';
 
 function MainPage() {
   const { showWelcome, closeWelcome } = useWelcome();
@@ -181,6 +182,7 @@ function App() {
           <Route path="/test" element={<TestPage />} />
           <Route path="/create" element={<CreateArticlePage />} />
           <Route path="/articles" element={<ArticlesPage />} />
+          <Route path="/article/:id" element={<ViewArticlePage />} />
         </Routes>
       </Router>
     </ThemeProvider>

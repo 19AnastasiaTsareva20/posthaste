@@ -184,9 +184,11 @@ export const ArticlesPage: React.FC = () => {
                   </div>
                   
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
-                      👁️ Просмотр
-                    </Button>
+                    <Link to={`/article/${article.id}`}>
+                      <Button variant="outline" size="sm">
+                        👁️ Просмотр
+                      </Button>
+                    </Link>
                     <Button variant="outline" size="sm">
                       ✏️ Редактировать
                     </Button>
