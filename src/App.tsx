@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import './App.css';
-import { Button, Card, ThemeToggle, WelcomeModal } from './components/ui';
+import { Button, Card, ThemeToggle, WelcomeModal, AdminPanel } from './components/ui';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { useWelcome } from './hooks/useWelcome';
 import { TestPage } from './pages/TestPage';
@@ -10,6 +10,20 @@ import { ArticlesPage } from './pages/ArticlesPage';
 
 function MainPage() {
   const { showWelcome, closeWelcome } = useWelcome();
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+
+  // Обработка горячих клавиш/Handle hotkeys
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+        e.preventDefault();
+        setShowAdminPanel(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <>
@@ -136,6 +150,23 @@ function MainPage() {
 
         {/* Модалка приветствия/Welcome modal */}
         <WelcomeModal isOpen={showWelcome} onClose={closeWelcome} />
+
+        {/* Админ-панель/Admin panel */}
+        <AdminPanel 
+          isOpen={showAdminPanel} 
+          onClose={() => setShowAdminPanel(false)} 
+        />
+
+        {/* Скрытая кнопка админки/Hidden admin button */}
+        <div className="fixed bottom-4 right-4 opacity-20 hover:opacity-100 transition-opacity">
+          <button
+            onClick={() => setShowAdminPanel(true)}
+            className="bg-gray-800 text-white p-2 rounded-full text-xs shadow-lg"
+            title="Панель администратора (Ctrl+Shift+A)"
+          >
+            🔧
+          </button>
+        </div>
       </div>
     </>
   );
