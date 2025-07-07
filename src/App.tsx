@@ -5,6 +5,7 @@ import { Button, Card, ThemeToggle, WelcomeModal } from './components/ui';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { useWelcome } from './hooks/useWelcome';
 import { TestPage } from './pages/TestPage';
+import { CreateArticlePage } from './pages/CreateArticlePage';
 
 function MainPage() {
   const { showWelcome, closeWelcome } = useWelcome();
@@ -30,6 +31,12 @@ function MainPage() {
                   Главная
                 </Link>
                 <Link 
+                  to="/create" 
+                  className="text-white/80 hover:text-white transition-colors px-3 py-2 rounded"
+                >
+                  ✍️ Написать
+                </Link>
+                <Link 
                   to="/test" 
                   className="text-white/80 hover:text-white transition-colors px-3 py-2 rounded"
                 >
@@ -53,9 +60,11 @@ function MainPage() {
                 Создавайте, публикуйте и делитесь своими статьями с друзьями и всем миром.
               </p>
               <div className="flex gap-4 flex-wrap">
-                <Button className="bg-white text-gray-900 hover:bg-gray-100">
-                  Создать статью
-                </Button>
+                <Link to="/create">
+                  <Button className="bg-white text-gray-900 hover:bg-gray-100">
+                    Создать статью
+                  </Button>
+                </Link>
                 <Button variant="outline" className="border-white text-white hover:bg-white/10">
                   Мои публикации
                 </Button>
@@ -130,6 +139,7 @@ function App() {
         <Routes>
           <Route path="/" element={<MainPage />} />
           <Route path="/test" element={<TestPage />} />
+          <Route path="/create" element={<CreateArticlePage />} />
         </Routes>
       </Router>
     </ThemeProvider>
