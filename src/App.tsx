@@ -6,6 +6,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { useWelcome } from './hooks/useWelcome';
 import { TestPage } from './pages/TestPage';
 import { CreateArticlePage } from './pages/CreateArticlePage';
+import { ArticlesPage } from './pages/ArticlesPage';
 
 function MainPage() {
   const { showWelcome, closeWelcome } = useWelcome();
@@ -37,6 +38,12 @@ function MainPage() {
                   ✍️ Написать
                 </Link>
                 <Link 
+                  to="/articles" 
+                  className="text-white/80 hover:text-white transition-colors px-3 py-2 rounded"
+                >
+                  📚 Статьи
+                </Link>
+                <Link 
                   to="/test" 
                   className="text-white/80 hover:text-white transition-colors px-3 py-2 rounded"
                 >
@@ -65,9 +72,11 @@ function MainPage() {
                     Создать статью
                   </Button>
                 </Link>
-                <Button variant="outline" className="border-white text-white hover:bg-white/10">
-                  Мои публикации
-                </Button>
+                <Link to="/articles">
+                  <Button variant="outline" className="border-white text-white hover:bg-white/10">
+                    Мои публикации
+                  </Button>
+                </Link>
                 <Link to="/test">
                   <Button variant="outline" className="border-white text-white hover:bg-white/10">
                     🧪 Тестовая страница
@@ -140,6 +149,7 @@ function App() {
           <Route path="/" element={<MainPage />} />
           <Route path="/test" element={<TestPage />} />
           <Route path="/create" element={<CreateArticlePage />} />
+          <Route path="/articles" element={<ArticlesPage />} />
         </Routes>
       </Router>
     </ThemeProvider>
