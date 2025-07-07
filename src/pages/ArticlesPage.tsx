@@ -189,9 +189,11 @@ export const ArticlesPage: React.FC = () => {
                         👁️ Просмотр
                       </Button>
                     </Link>
-                    <Button variant="outline" size="sm">
-                      ✏️ Редактировать
-                    </Button>
+                    <Link to={`/create?edit=${article.id}`}>
+                      <Button variant="outline" size="sm">
+                        ✏️ Редактировать
+                      </Button>
+                    </Link>
                     <Button 
                       variant="danger" 
                       size="sm"
