@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, Card, FileUpload, TodoList } from '../components/ui';
+import { useToast } from '../components/ui/NotificationSystem';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import TiptapLink from '@tiptap/extension-link';
@@ -19,6 +20,7 @@ interface Article {
 
 export const CreateArticlePage: React.FC = () => {
   const navigate = useNavigate();
+  const toast = useToast();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('edit');
   const isEditing = Boolean(editId);
@@ -71,12 +73,14 @@ export const CreateArticlePage: React.FC = () => {
         if (editor) {
           editor.commands.setContent(articleToEdit.content);
         }
+        toast.info('Статья загружена для редактирования');
       } else {
         // Статья не найдена, перенаправляем на создание новой
+        toast.error('Статья не найдена');
         navigate('/create');
       }
     }
-  }, [isEditing, editId, editor, navigate]);
+  }, [isEditing, editId, editor, navigate, toast]);
 
   // Обновление счетчиков при загрузке контента
   useEffect(() => {
@@ -91,11 +95,13 @@ export const CreateArticlePage: React.FC = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
       setTags([...tags, tagInput.trim()]);
       setTagInput('');
+      toast.success(`Тег "${tagInput.trim()}" добавлен`);
     }
   };
 
   const removeTag = (tagToRemove: string) => {
     setTags(tags.filter(tag => tag !== tagToRemove));
+    toast.info(`Тег "${tagToRemove}" удален`);
   };
 
   const handleTagKeyPress = (e: React.KeyboardEvent) => {
@@ -112,6 +118,13 @@ export const CreateArticlePage: React.FC = () => {
     
     try {
       const content = editor.getHTML();
+      
+      if (!title.trim() && !content.trim()) {
+        toast.warning('Статья пуста', 'Добавьте заголовок или содержание');
+        setIsSaving(false);
+        return;
+      }
+
       const now = new Date().toISOString();
       
       const article: Article = {
@@ -134,8 +147,10 @@ export const CreateArticlePage: React.FC = () => {
         updatedArticles = savedArticles.map((a: Article) => 
           a.id === editId ? article : a
         );
+        toast.success('Статья обновлена!', 'Изменения сохранены успешно');
       } else {
         updatedArticles = [...savedArticles, article];
+        toast.success('Статья опубликована!', 'Ваша статья доступна для просмотра');
       }
 
       localStorage.setItem('posthaste-articles', JSON.stringify(updatedArticles));
@@ -144,7 +159,7 @@ export const CreateArticlePage: React.FC = () => {
       navigate(`/article/${article.id}`);
     } catch (error) {
       console.error('Ошибка сохранения:', error);
-      alert('Ошибка при сохранении статьи');
+      toast.error('Ошибка при сохранении статьи', 'Попробуйте снова');
     } finally {
       setIsSaving(false);
     }
@@ -154,6 +169,12 @@ export const CreateArticlePage: React.FC = () => {
     if (!editor) return;
 
     const content = editor.getHTML();
+    
+    if (!title.trim() && !content.trim()) {
+      toast.warning('Нечего сохранять', 'Добавьте содержание для черновика');
+      return;
+    }
+
     const draft = {
       title,
       content,
@@ -163,7 +184,7 @@ export const CreateArticlePage: React.FC = () => {
     };
 
     localStorage.setItem('posthaste-draft', JSON.stringify(draft));
-    alert('Черновик сохранен!');
+    toast.success('Черновик сохранен!', 'Вы можете продолжить работу позже');
   };
 
   const loadDraft = () => {
@@ -176,7 +197,22 @@ export const CreateArticlePage: React.FC = () => {
       if (editor) {
         editor.commands.setContent(parsedDraft.content);
       }
-      alert('Черновик загружен!');
+      toast.success('Черновик загружен!', 'Продолжайте редактирование');
+    } else {
+      toast.info('Нет сохраненных черновиков');
+    }
+  };
+
+  const clearContent = () => {
+    if (window.confirm('Очистить все содержимое?')) {
+      setTitle('');
+      setIsPublic(false);
+      setTags([]);
+      setTagInput('');
+      if (editor) {
+        editor.commands.clearContent();
+      }
+      toast.info('Содержимое очищено');
     }
   };
 
@@ -224,6 +260,13 @@ export const CreateArticlePage: React.FC = () => {
                   size="sm"
                 >
                   📂 Загрузить черновик
+                </Button>
+                <Button
+                  onClick={clearContent}
+                  className="bg-red-500/20 text-white hover:bg-red-500/30 border-red-500/30"
+                  size="sm"
+                >
+                  🗑️ Очистить
                 </Button>
               </>
             )}
@@ -397,6 +440,12 @@ export const CreateArticlePage: React.FC = () => {
                 <div className="flex justify-between">
                   <span>Тегов:</span>
                   <span className="font-mono">{tags.length}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Режим:</span>
+                  <span className="font-mono text-xs">
+                    {isEditing ? 'Редактирование' : 'Создание'}
+                  </span>
                 </div>
               </div>
             </Card>

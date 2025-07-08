@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import './App.css';
 import { Button, Card, ThemeToggle, WelcomeModal, AdminPanel } from './components/ui';
+import { NotificationProvider } from './components/ui/NotificationSystem';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { useWelcome } from './hooks/useWelcome';
 import { TestPage } from './pages/TestPage';
@@ -176,15 +177,17 @@ function MainPage() {
 function App() {
   return (
     <ThemeProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<MainPage />} />
-          <Route path="/test" element={<TestPage />} />
-          <Route path="/create" element={<CreateArticlePage />} />
-          <Route path="/articles" element={<ArticlesPage />} />
-          <Route path="/article/:id" element={<ViewArticlePage />} />
-        </Routes>
-      </Router>
+      <NotificationProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<MainPage />} />
+            <Route path="/test" element={<TestPage />} />
+            <Route path="/create" element={<CreateArticlePage />} />
+            <Route path="/articles" element={<ArticlesPage />} />
+            <Route path="/article/:id" element={<ViewArticlePage />} />
+          </Routes>
+        </Router>
+      </NotificationProvider>
     </ThemeProvider>
   );
 }
