@@ -6,3 +6,4 @@ export { TodoList } from './TodoList';
 export { FileUpload } from './FileUpload';
 export { AdminPanel } from './AdminPanel';
 export { NotificationProvider, useNotifications, useToast } from './NotificationSystem';
+export { SearchBar } from './SearchBar';

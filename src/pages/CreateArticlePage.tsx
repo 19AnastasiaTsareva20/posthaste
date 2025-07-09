@@ -60,6 +60,15 @@ export const CreateArticlePage: React.FC = () => {
     },
   });
 
+  // Временно отключаем автосохранение до исправления циклов
+  // Заглушки для совместимости/Stubs for compatibility
+  const forceSave = () => toast.info('Автосохранение временно отключено');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const loadSaved = () => null;
+  const clearSaved = () => {};
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const hasUnsavedChanges = false;
+
   // Загрузка статьи для редактирования/Load article for editing
   useEffect(() => {
     if (isEditing && editId) {
@@ -90,6 +99,37 @@ export const CreateArticlePage: React.FC = () => {
       setCharCount(text.length);
     }
   }, [editor]);
+
+// Горячие клавиши/Hotkeys
+useEffect(() => {
+  const handleKeyDown = (e: KeyboardEvent) => {
+    // Ctrl+S - Принудительное сохранение автосохранения
+    if (e.ctrlKey && e.key === 's') {
+      e.preventDefault();
+      if (!isEditing) {
+        forceSave();
+      }
+    }
+    
+    // Ctrl+Shift+S - Сохранить/опубликовать статью
+    if (e.ctrlKey && e.shiftKey && e.key === 'S') {
+      e.preventDefault();
+      saveArticle();
+    }
+    
+    // Ctrl+Shift+D - Загрузить черновик
+    if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+      e.preventDefault();
+      if (!isEditing) {
+        loadDraft();
+      }
+    }
+  };
+
+  window.addEventListener('keydown', handleKeyDown);
+  return () => window.removeEventListener('keydown', handleKeyDown);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []); // Отключаем warning для этого случая
 
   const addTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
@@ -151,6 +191,8 @@ export const CreateArticlePage: React.FC = () => {
       } else {
         updatedArticles = [...savedArticles, article];
         toast.success('Статья опубликована!', 'Ваша статья доступна для просмотра');
+        // Очищаем автосохранение после публикации
+        clearSaved();
       }
 
       localStorage.setItem('posthaste-articles', JSON.stringify(updatedArticles));
@@ -212,6 +254,7 @@ export const CreateArticlePage: React.FC = () => {
       if (editor) {
         editor.commands.clearContent();
       }
+      clearSaved(); // Очищаем автосохраненные данные
       toast.info('Содержимое очищено');
     }
   };
@@ -239,9 +282,14 @@ export const CreateArticlePage: React.FC = () => {
             >
               ← Назад
             </Link>
-            <h1 className="text-2xl font-bold text-white">
-              {isEditing ? 'Редактирование статьи' : 'Новая статья'}
-            </h1>
+            <div>
+              <h1 className="text-2xl font-bold text-white">
+                {isEditing ? 'Редактирование статьи' : 'Новая статья'}
+              </h1>
+              <p className="text-white/80 text-sm">
+                {!isEditing && 'Ctrl+Shift+S для быстрой публикации • Ctrl+Shift+D для загрузки черновика'}
+              </p>
+            </div>
           </div>
           
           <div className="flex gap-2">
