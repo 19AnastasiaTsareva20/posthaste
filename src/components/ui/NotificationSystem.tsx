@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createContext, useContext } from 'react';
+import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
 import { Card } from './Card';
 
 interface Notification {
@@ -52,7 +52,11 @@ export const useToast = () => {
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  const addNotification = (notification: Omit<Notification, 'id'>) => {
+  const removeNotification = useCallback((id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  }, []);
+
+  const addNotification = useCallback((notification: Omit<Notification, 'id'>) => {
     const id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
     const newNotification = { ...notification, id };
     
@@ -64,15 +68,11 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         removeNotification(id);
       }, notification.duration || 4000);
     }
-  };
+  }, [removeNotification]);
 
-  const removeNotification = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-  };
-
-  const clearAll = () => {
+  const clearAll = useCallback(() => {
     setNotifications([]);
-  };
+  }, []);
 
   return (
     <NotificationContext.Provider 
@@ -111,13 +111,14 @@ const NotificationItem: React.FC<{
 
   useEffect(() => {
     // Анимация появления/Entrance animation
-    setTimeout(() => setIsVisible(true), 50);
+    const timer = setTimeout(() => setIsVisible(true), 50);
+    return () => clearTimeout(timer);
   }, []);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setIsLeaving(true);
     setTimeout(onClose, 200);
-  };
+  }, [onClose]);
 
   const getIcon = () => {
     switch (notification.type) {
