@@ -62,31 +62,28 @@ export const CreateArticlePage: React.FC = () => {
 
   // Временно отключаем автосохранение до исправления циклов
   // Заглушки для совместимости/Stubs for compatibility
-  const forceSave = () => toast.info('Автосохранение временно отключено');
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const loadSaved = () => null;
   const clearSaved = () => {};
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const hasUnsavedChanges = false;
 
   // Загрузка статьи для редактирования/Load article for editing
   useEffect(() => {
-    if (isEditing && editId) {
+    if (isEditing && editId && editor) {
       const savedArticles = JSON.parse(localStorage.getItem('posthaste-articles') || '[]');
       const articleToEdit = savedArticles.find((a: Article) => a.id === editId);
       
       if (articleToEdit) {
         setTitle(articleToEdit.title);
         setIsPublic(articleToEdit.isPublic);
-        setTags(articleToEdit.tags);
-        if (editor) {
-          editor.commands.setContent(articleToEdit.content);
-        }
+        setTags(articleToEdit.tags || []);
+        // Устанавливаем содержание с небольшой задержкой
+        setTimeout(() => {
+          if (editor && !editor.isDestroyed) {
+            editor.commands.setContent(articleToEdit.content);
+          }
+        }, 100);
         toast.info('Статья загружена для редактирования');
       } else {
-        // Статья не найдена, перенаправляем на создание новой
         toast.error('Статья не найдена');
-        navigate('/create');
+        navigate('/articles');
       }
     }
   }, [isEditing, editId, editor, navigate, toast]);
@@ -99,37 +96,6 @@ export const CreateArticlePage: React.FC = () => {
       setCharCount(text.length);
     }
   }, [editor]);
-
-// Горячие клавиши/Hotkeys
-useEffect(() => {
-  const handleKeyDown = (e: KeyboardEvent) => {
-    // Ctrl+S - Принудительное сохранение автосохранения
-    if (e.ctrlKey && e.key === 's') {
-      e.preventDefault();
-      if (!isEditing) {
-        forceSave();
-      }
-    }
-    
-    // Ctrl+Shift+S - Сохранить/опубликовать статью
-    if (e.ctrlKey && e.shiftKey && e.key === 'S') {
-      e.preventDefault();
-      saveArticle();
-    }
-    
-    // Ctrl+Shift+D - Загрузить черновик
-    if (e.ctrlKey && e.shiftKey && e.key === 'D') {
-      e.preventDefault();
-      if (!isEditing) {
-        loadDraft();
-      }
-    }
-  };
-
-  window.addEventListener('keydown', handleKeyDown);
-  return () => window.removeEventListener('keydown', handleKeyDown);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, []); // Отключаем warning для этого случая
 
   const addTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
@@ -287,7 +253,7 @@ useEffect(() => {
                 {isEditing ? 'Редактирование статьи' : 'Новая статья'}
               </h1>
               <p className="text-white/80 text-sm">
-                {!isEditing && 'Ctrl+Shift+S для быстрой публикации • Ctrl+Shift+D для загрузки черновика'}
+                Создавайте качественный контент с помощью продвинутого редактора
               </p>
             </div>
           </div>
