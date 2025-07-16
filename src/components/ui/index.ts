@@ -7,3 +7,5 @@ export { FileUpload } from './FileUpload';
 export { AdminPanel } from './AdminPanel';
 export { NotificationProvider, useNotifications, useToast } from './NotificationSystem';
 export { SearchBar } from './SearchBar';
+export { FolderManager } from './FolderManager';
+export { TagManager } from './TagManager';

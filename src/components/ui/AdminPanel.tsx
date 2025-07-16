@@ -92,7 +92,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
       <Card className="max-w-2xl w-full max-h-[80vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-text-primary dark:text-dark-text-primary">
-            🔧 Панель администратора
+            Панель администратора
           </h2>
           <button
             onClick={onClose}
@@ -104,8 +104,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
 
         {/* Статистика/Statistics */}
         <div className="grid md:grid-cols-2 gap-4 mb-6">
-          <div className="bg-gradient-accent rounded-lg p-4 text-white">
-            <h3 className="font-semibold mb-2">📝 Статьи</h3>
+          <div className="bg-gradient-cta rounded-lg p-4 text-white">
+            <h3 className="font-semibold mb-2">Статьи</h3>
             <div className="space-y-1 text-sm">
               <div>Всего: {stats.totalArticles}</div>
               <div>Публичные: {stats.publicArticles}</div>
@@ -113,15 +113,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
             </div>
           </div>
 
-          <div className="bg-gradient-premium rounded-lg p-4 text-white">
-            <h3 className="font-semibold mb-2">📎 Файлы</h3>
+          <div className="bg-gradient-subtle rounded-lg p-4 text-primary">
+            <h3 className="font-semibold mb-2">Файлы</h3>
             <div className="text-sm">
               <div>Загружено: {stats.totalFiles}</div>
             </div>
           </div>
 
           <div className="bg-success rounded-lg p-4 text-white">
-            <h3 className="font-semibold mb-2">✅ Задачи</h3>
+            <h3 className="font-semibold mb-2">Задачи</h3>
             <div className="space-y-1 text-sm">
               <div>Всего: {stats.totalTodos}</div>
               <div>Выполнено: {stats.completedTodos}</div>
@@ -130,7 +130,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div className="bg-primary rounded-lg p-4 text-white">
-            <h3 className="font-semibold mb-2">⚙️ Система</h3>
+            <h3 className="font-semibold mb-2">Система</h3>
             <div className="space-y-1 text-sm">
               <div>Режим разработчика: {isDevMode ? 'Вкл' : 'Выкл'}</div>
               <div>Версия: 1.0.0-beta</div>
@@ -141,7 +141,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
         {/* Настройки разработчика/Developer settings */}
         <Card className="mb-6">
           <h3 className="font-semibold text-text-primary dark:text-dark-text-primary mb-4">
-            👨‍💻 Настройки разработчика
+            Настройки разработчика
           </h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -158,7 +158,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
             {isDevMode && (
               <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded p-3">
                 <p className="text-yellow-800 dark:text-yellow-200 text-sm">
-                  🚧 Режим разработчика активен. Дополнительная отладочная информация доступна в консоли браузера.
+                  Режим разработчика активен. Дополнительная отладочная информация доступна в консоли браузера.
                 </p>
               </div>
             )}
@@ -168,14 +168,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
         {/* Управление данными/Data management */}
         <Card>
           <h3 className="font-semibold text-text-primary dark:text-dark-text-primary mb-4">
-            💾 Управление данными
+            Управление данными
           </h3>
           <div className="flex gap-3 flex-wrap">
             <Button onClick={exportData} variant="success" size="sm">
-              📥 Экспорт данных
+              Экспорт данных
             </Button>
             <Button onClick={clearAllData} variant="danger" size="sm">
-              🗑️ Очистить всё
+              Очистить всё
             </Button>
           </div>
         </Card>
