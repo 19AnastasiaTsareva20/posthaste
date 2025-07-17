@@ -13,3 +13,4 @@ export { SearchComponent } from './SearchComponent';
 export { NoteCard } from './NoteCard';
 export { FavoritesFilter } from './FavoritesFilter';
 export { ImageUploader } from './ImageUploader';
+export { TableInserter } from './TableInserter';

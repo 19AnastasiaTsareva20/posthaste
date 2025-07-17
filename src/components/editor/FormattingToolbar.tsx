@@ -4,11 +4,15 @@ import { Button } from '../ui';
 interface FormattingToolbarProps {
   onFormat: (command: string, value?: string) => void;
   onImageUpload: () => void;
+  onInsertChecklist: () => void;
+  onInsertTable: () => void;
 }
 
 export const FormattingToolbar: React.FC<FormattingToolbarProps> = ({
   onFormat,
-  onImageUpload
+  onImageUpload,
+  onInsertChecklist,
+  onInsertTable
 }) => {
   // Format buttons data/Данные кнопок форматирования
   const formatButtons = [
@@ -78,6 +82,13 @@ export const FormattingToolbar: React.FC<FormattingToolbarProps> = ({
               {btn.icon}
             </button>
           ))}
+          <button
+            onClick={onInsertChecklist}
+            className="px-3 py-1 rounded bg-background hover:bg-success hover:text-white transition-colors text-sm"
+            title="Чек-лист задач"
+          >
+            ☐ Задачи
+          </button>
         </div>
 
         {/* Alignment/Выравнивание */}
@@ -94,8 +105,15 @@ export const FormattingToolbar: React.FC<FormattingToolbarProps> = ({
           ))}
         </div>
 
-        {/* Special actions/Специальные действия */}
+        {/* Tables and special content/Таблицы и специальный контент */}
         <div className="flex gap-1 border-r border-default pr-2">
+          <button
+            onClick={onInsertTable}
+            className="px-3 py-1 rounded bg-background hover:bg-accent hover:text-white transition-colors text-sm"
+            title="Вставить таблицу"
+          >
+            ⚏ Таблица
+          </button>
           <button
             onClick={() => onFormat('insertHorizontalRule')}
             className="px-3 py-1 rounded bg-background hover:bg-primary hover:text-white transition-colors text-sm"
@@ -103,6 +121,10 @@ export const FormattingToolbar: React.FC<FormattingToolbarProps> = ({
           >
             ―
           </button>
+        </div>
+
+        {/* Links and media/Ссылки и медиа */}
+        <div className="flex gap-1 border-r border-default pr-2">
           <button
             onClick={() => {
               const url = prompt('Введите URL ссылки:');
@@ -115,17 +137,13 @@ export const FormattingToolbar: React.FC<FormattingToolbarProps> = ({
           >
             🔗
           </button>
-        </div>
-
-        {/* Image upload/Загрузка изображений */}
-        <div className="flex gap-1">
           <Button
             size="sm"
             variant="outline"
             onClick={onImageUpload}
             title="Вставить изображение"
           >
-            🖼️ Изображение
+            🖼️
           </Button>
         </div>
 

@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { FormattingToolbar } from './FormattingToolbar';
 import { ImageUploader } from '../ui/ImageUploader';
+import { TableInserter } from '../ui/TableInserter';
 
 interface RichTextEditorProps {
   value: string;
@@ -17,6 +18,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const [showImageUploader, setShowImageUploader] = useState(false);
+  const [showTableInserter, setShowTableInserter] = useState(false);
 
   // Initialize editor/Инициализация редактора
   useEffect(() => {
@@ -38,6 +40,23 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     document.execCommand(command, false, value);
     editorRef.current?.focus();
     handleInput();
+  };
+
+  // Insert checklist/Вставка чек-листа
+  const insertChecklist = () => {
+    const checklistHtml = `
+      <div class="checklist-container" style="margin: 10px 0;">
+        <div class="checklist-item" style="display: flex; align-items: center; margin: 5px 0;">
+          <input type="checkbox" style="margin-right: 8px; cursor: pointer;" onchange="this.nextSibling.style.textDecoration = this.checked ? 'line-through' : 'none'">
+          <span style="flex: 1;">Новая задача</span>
+        </div>
+        <div class="checklist-item" style="display: flex; align-items: center; margin: 5px 0;">
+          <input type="checkbox" style="margin-right: 8px; cursor: pointer;" onchange="this.nextSibling.style.textDecoration = this.checked ? 'line-through' : 'none'">
+          <span style="flex: 1;">Еще одна задача</span>
+        </div>
+      </div>
+    `;
+    executeCommand('insertHTML', checklistHtml);
   };
 
   // Handle keyboard shortcuts/Обработка горячих клавиш
@@ -75,6 +94,11 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     executeCommand('insertHTML', img);
   };
 
+  // Handle table insertion/Обработка вставки таблицы
+  const handleTableInsert = (tableHtml: string) => {
+    executeCommand('insertHTML', tableHtml);
+  };
+
   // Handle paste/Обработка вставки
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
@@ -101,12 +125,25 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     executeCommand('insertText', text);
   };
 
+  // Handle checkbox clicks in editor/Обработка кликов по чекбоксам в редакторе
+  const handleClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'INPUT' && target.getAttribute('type') === 'checkbox') {
+      // Allow checkbox interaction/Разрешить взаимодействие с чекбоксом
+      setTimeout(() => {
+        handleInput();
+      }, 0);
+    }
+  };
+
   return (
     <div className={`border border-default rounded-lg overflow-hidden ${className}`}>
       {/* Formatting toolbar/Панель форматирования */}
       <FormattingToolbar
         onFormat={executeCommand}
         onImageUpload={() => setShowImageUploader(true)}
+        onInsertChecklist={insertChecklist}
+        onInsertTable={() => setShowTableInserter(true)}
       />
       
       {/* Editor content/Содержимое редактора */}
@@ -117,6 +154,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         onInput={handleInput}
         onKeyDown={handleKeyDown}
         onPaste={handlePaste}
+        onClick={handleClick}
         data-placeholder={placeholder}
         style={{
           fontSize: '16px',
@@ -131,6 +169,13 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         isOpen={showImageUploader}
         onClose={() => setShowImageUploader(false)}
         onImageInsert={handleImageInsert}
+      />
+
+      {/* Table inserter modal/Модальное окно вставки таблиц */}
+      <TableInserter
+        isOpen={showTableInserter}
+        onClose={() => setShowTableInserter(false)}
+        onInsert={handleTableInsert}
       />
     </div>
   );
