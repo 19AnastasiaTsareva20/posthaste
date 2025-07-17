@@ -9,3 +9,6 @@ export { NotificationProvider, useNotifications, useToast } from './Notification
 export { SearchBar } from './SearchBar';
 export { FolderManager } from './FolderManager';
 export { TagManager } from './TagManager';
+export { SearchComponent } from './SearchComponent';
+export { NoteCard } from './NoteCard';
+export { FavoritesFilter } from './FavoritesFilter';
