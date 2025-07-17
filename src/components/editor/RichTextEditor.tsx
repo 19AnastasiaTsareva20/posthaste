@@ -1,173 +1,137 @@
-import React from 'react';
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Link from '@tiptap/extension-link';
-import Image from '@tiptap/extension-image';
-import Placeholder from '@tiptap/extension-placeholder';
-import CharacterCount from '@tiptap/extension-character-count';
+import React, { useRef, useEffect, useState } from 'react';
+import { FormattingToolbar } from './FormattingToolbar';
+import { ImageUploader } from '../ui/ImageUploader';
 
 interface RichTextEditorProps {
-  content?: string;
-  onChange?: (content: string) => void;
+  value: string;
+  onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
 }
 
 export const RichTextEditor: React.FC<RichTextEditorProps> = ({
-  content = '',
+  value,
   onChange,
-  placeholder = 'Начните писать свою статью...',
-  className = ''
+  placeholder = "Начните писать...",
+  className = ""
 }) => {
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Link.configure({
-        openOnClick: false,
-      }),
-      Image,
-      Placeholder.configure({
-        placeholder,
-      }),
-      CharacterCount.configure({
-        limit: 10000, // Лимит символов/Character limit
-      }),
-    ],
-    content,
-    onUpdate: ({ editor }) => {
-      onChange?.(editor.getHTML());
-    },
-    editorProps: {
-      attributes: {
-        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none min-h-[200px] p-4',
-      },
-    },
-  });
+  const editorRef = useRef<HTMLDivElement>(null);
+  const [showImageUploader, setShowImageUploader] = useState(false);
 
-  if (!editor) {
-    return null;
-  }
+  // Initialize editor/Инициализация редактора
+  useEffect(() => {
+    if (editorRef.current && editorRef.current.innerHTML !== value) {
+      editorRef.current.innerHTML = value;
+    }
+  }, [value]);
 
-  // Панель инструментов/Toolbar
-  const ToolbarButton = ({ 
-    onClick, 
-    isActive = false, 
-    children, 
-    title 
-  }: { 
-    onClick: () => void; 
-    isActive?: boolean; 
-    children: React.ReactNode; 
-    title: string;
-  }) => (
-    <button
-      onClick={onClick}
-      className={`p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-        isActive ? 'bg-primary text-white' : 'text-text-primary dark:text-dark-text-primary'
-      }`}
-      title={title}
-      type="button"
-    >
-      {children}
-    </button>
-  );
+  // Handle content change/Обработка изменения содержимого
+  const handleInput = () => {
+    if (editorRef.current) {
+      const content = editorRef.current.innerHTML;
+      onChange(content);
+    }
+  };
+
+  // Execute formatting command/Выполнение команды форматирования
+  const executeCommand = (command: string, value?: string) => {
+    document.execCommand(command, false, value);
+    editorRef.current?.focus();
+    handleInput();
+  };
+
+  // Handle keyboard shortcuts/Обработка горячих клавиш
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Ctrl+B for bold/Ctrl+B для жирного
+    if (e.ctrlKey && e.key === 'b') {
+      e.preventDefault();
+      executeCommand('bold');
+    }
+    // Ctrl+I for italic/Ctrl+I для курсива
+    else if (e.ctrlKey && e.key === 'i') {
+      e.preventDefault();
+      executeCommand('italic');
+    }
+    // Ctrl+U for underline/Ctrl+U для подчеркивания
+    else if (e.ctrlKey && e.key === 'u') {
+      e.preventDefault();
+      executeCommand('underline');
+    }
+    // Tab for indent/Tab для отступа
+    else if (e.key === 'Tab') {
+      e.preventDefault();
+      executeCommand('indent');
+    }
+    // Shift+Tab for outdent/Shift+Tab для уменьшения отступа
+    else if (e.shiftKey && e.key === 'Tab') {
+      e.preventDefault();
+      executeCommand('outdent');
+    }
+  };
+
+  // Handle image insertion/Обработка вставки изображения
+  const handleImageInsert = (imageData: string) => {
+    const img = `<img src="${imageData}" alt="Изображение" style="max-width: 100%; height: auto; border-radius: 4px; margin: 10px 0;" />`;
+    executeCommand('insertHTML', img);
+  };
+
+  // Handle paste/Обработка вставки
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    
+    // Handle image paste/Обработка вставки изображения
+    const items = Array.from(e.clipboardData.items);
+    const imageItem = items.find(item => item.type.startsWith('image/'));
+    
+    if (imageItem) {
+      const file = imageItem.getAsFile();
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const result = event.target?.result as string;
+          handleImageInsert(result);
+        };
+        reader.readAsDataURL(file);
+        return;
+      }
+    }
+    
+    // Handle text paste/Обработка вставки текста
+    const text = e.clipboardData.getData('text/plain');
+    executeCommand('insertText', text);
+  };
 
   return (
-    <div className={`border border-border dark:border-dark-border rounded-lg bg-surface dark:bg-dark-surface ${className}`}>
-      {/* Панель инструментов/Toolbar */}
-      <div className="border-b border-border dark:border-dark-border p-2 flex gap-1 flex-wrap">
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          isActive={editor.isActive('bold')}
-          title="Жирный (Ctrl+B)"
-        >
-          <strong>B</strong>
-        </ToolbarButton>
-        
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          isActive={editor.isActive('italic')}
-          title="Курсив (Ctrl+I)"
-        >
-          <em>I</em>
-        </ToolbarButton>
-        
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleStrike().run()}
-          isActive={editor.isActive('strike')}
-          title="Зачёркнутый"
-        >
-          <s>S</s>
-        </ToolbarButton>
-        
-        <div className="w-px bg-border dark:bg-dark-border mx-1" />
-        
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-          isActive={editor.isActive('heading', { level: 1 })}
-          title="Заголовок 1"
-        >
-          H1
-        </ToolbarButton>
-        
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          isActive={editor.isActive('heading', { level: 2 })}
-          title="Заголовок 2"
-        >
-          H2
-        </ToolbarButton>
-        
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-          isActive={editor.isActive('heading', { level: 3 })}
-          title="Заголовок 3"
-        >
-          H3
-        </ToolbarButton>
-        
-        <div className="w-px bg-border dark:bg-dark-border mx-1" />
-        
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          isActive={editor.isActive('bulletList')}
-          title="Маркированный список"
-        >
-          •
-        </ToolbarButton>
-        
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          isActive={editor.isActive('orderedList')}
-          title="Нумерованный список"
-        >
-          1.
-        </ToolbarButton>
-        
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          isActive={editor.isActive('blockquote')}
-          title="Цитата"
-        >
-          "
-        </ToolbarButton>
-      </div>
-      
-      {/* Область редактирования/Editor area */}
-      <EditorContent 
-        editor={editor}
-        className="text-text-primary dark:text-dark-text-primary"
+    <div className={`border border-default rounded-lg overflow-hidden ${className}`}>
+      {/* Formatting toolbar/Панель форматирования */}
+      <FormattingToolbar
+        onFormat={executeCommand}
+        onImageUpload={() => setShowImageUploader(true)}
       />
       
-      {/* Статистика/Statistics */}
-      <div className="border-t border-border dark:border-dark-border p-2 text-sm text-text-secondary dark:text-dark-text-secondary flex justify-between">
-        <span>
-          {editor.storage.characterCount.characters()}/{editor.extensionManager.extensions.find(ext => ext.name === 'characterCount')?.options.limit} символов
-        </span>
-        <span>
-          {editor.storage.characterCount.words()} слов
-        </span>
-      </div>
+      {/* Editor content/Содержимое редактора */}
+      <div
+        ref={editorRef}
+        contentEditable
+        className="min-h-[300px] p-4 focus:outline-none bg-background"
+        onInput={handleInput}
+        onKeyDown={handleKeyDown}
+        onPaste={handlePaste}
+        data-placeholder={placeholder}
+        style={{
+          fontSize: '16px',
+          lineHeight: '1.6',
+          color: 'var(--color-text-primary)'
+        }}
+        suppressContentEditableWarning={true}
+      />
+      
+      {/* Image uploader modal/Модальное окно загрузки изображений */}
+      <ImageUploader
+        isOpen={showImageUploader}
+        onClose={() => setShowImageUploader(false)}
+        onImageInsert={handleImageInsert}
+      />
     </div>
   );
 };
