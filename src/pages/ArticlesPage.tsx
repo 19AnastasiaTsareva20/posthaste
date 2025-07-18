@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   Card, 
@@ -7,12 +7,16 @@ import {
   NoteCard,
   FolderManager,
   TagManager,
-  FavoritesFilter 
+  FavoritesFilter,
+  QuickNote,
+  ArchiveManager
 } from '../components/ui';
 import { useNotes } from '../hooks/useNotes';
 
 export const ArticlesPage: React.FC = () => {
   const navigate = useNavigate();
+  const [showArchive, setShowArchive] = useState(false);
+  
   const {
     notes,
     allNotes,
@@ -24,12 +28,29 @@ export const ArticlesPage: React.FC = () => {
     setSelectedTag,
     showFavorites,
     setShowFavorites,
+    addNote,
     deleteNote,
-    toggleFavorite
+    toggleFavorite,
+    archiveNote,
+    restoreNote,
+    permanentlyDeleteNote
   } = useNotes();
 
-  // Count favorites/Подсчет избранных
+  // Count favorites and archived/Подсчет избранных и архивированных
   const favoritesCount = allNotes.filter(note => note.isFavorite && !note.isArchived).length;
+  const archivedCount = allNotes.filter(note => note.isArchived).length;
+
+  // Handle quick note save/Обработка сохранения быстрой заметки
+  const handleQuickNoteSave = (content: string) => {
+    addNote({
+      title: '',
+      content,
+      tags: ['быстрая-заметка'],
+      folderId: undefined,
+      isFavorite: false,
+      isArchived: false
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -83,6 +104,33 @@ export const ArticlesPage: React.FC = () => {
               onToggle={setShowFavorites}
               favoritesCount={favoritesCount}
             />
+
+            {/* Quick note/Быстрая заметка */}
+            <QuickNote onSave={handleQuickNoteSave} />
+
+            {/* Archive access/Доступ к архиву */}
+            <Card>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-semibold text-text-primary">Архив</h3>
+                  <span className="text-text-muted text-sm">({archivedCount})</span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowArchive(true)}
+                  className="w-full"
+                  disabled={archivedCount === 0}
+                >
+                  Открыть архив
+                </Button>
+                {archivedCount === 0 && (
+                  <p className="text-text-muted text-xs">
+                    Архивированных заметок пока нет
+                  </p>
+                )}
+              </div>
+            </Card>
           </div>
 
           {/* Notes grid/Сетка заметок */}
@@ -116,6 +164,7 @@ export const ArticlesPage: React.FC = () => {
                     onEdit={(note) => navigate(`/article/${note.id}`)}
                     onDelete={deleteNote}
                     onToggleFavorite={toggleFavorite}
+                    onArchive={archiveNote}
                     onClick={(note) => navigate(`/article/${note.id}`)}
                   />
                 ))}
@@ -123,6 +172,14 @@ export const ArticlesPage: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* Archive manager/Менеджер архива */}
+        <ArchiveManager
+          isOpen={showArchive}
+          onClose={() => setShowArchive(false)}
+          onRestore={restoreNote}
+          onPermanentDelete={permanentlyDeleteNote}
+        />
       </div>
     </div>
   );

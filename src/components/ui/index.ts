@@ -14,3 +14,5 @@ export { NoteCard } from './NoteCard';
 export { FavoritesFilter } from './FavoritesFilter';
 export { ImageUploader } from './ImageUploader';
 export { TableInserter } from './TableInserter';
+export { QuickNote } from './QuickNote';
+export { ArchiveManager } from './ArchiveManager';

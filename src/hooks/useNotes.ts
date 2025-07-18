@@ -108,7 +108,18 @@ export const useNotes = () => {
     updateNote(id, { isArchived: true });
   }, [updateNote]);
 
-  return {
+    // Restore note from archive/Восстановление заметки из архива
+  const restoreNote = useCallback((id: string) => {
+    updateNote(id, { isArchived: false });
+  }, [updateNote]);
+
+  // Permanently delete note/Окончательное удаление заметки
+  const permanentlyDeleteNote = useCallback((id: string) => {
+    const updatedNotes = notes.filter(note => note.id !== id);
+    saveNotes(updatedNotes);
+  }, [notes, saveNotes]);
+
+    return {
     notes: filteredNotes,
     allNotes: notes,
     searchQuery,
@@ -123,6 +134,9 @@ export const useNotes = () => {
     updateNote,
     deleteNote,
     toggleFavorite,
-    archiveNote
+    archiveNote,
+    restoreNote,
+    permanentlyDeleteNote
   };
 };
+

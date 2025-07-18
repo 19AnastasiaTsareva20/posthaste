@@ -7,6 +7,7 @@ interface NoteCardProps {
   onEdit: (note: Note) => void;
   onDelete: (id: string) => void;
   onToggleFavorite: (id: string) => void;
+  onArchive?: (id: string) => void;
   onClick?: (note: Note) => void;
 }
 
@@ -15,6 +16,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   onEdit,
   onDelete,
   onToggleFavorite,
+  onArchive,
   onClick
 }) => {
   // Format date/Форматирование даты
@@ -98,6 +100,21 @@ export const NoteCard: React.FC<NoteCardProps> = ({
             >
               Изменить
             </Button>
+            {onArchive && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (window.confirm('Архивировать заметку?')) {
+                    onArchive(note.id);
+                  }
+                }}
+                title="Архивировать заметку"
+              >
+                📁
+              </Button>
+            )}
             <Button
               size="sm"
               variant="danger"
