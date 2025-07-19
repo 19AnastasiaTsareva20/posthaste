@@ -1,14 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, Button } from './';
-import { Note } from '../../types';
+
+interface Note {
+  id: string;
+  title: string;
+  content: string;
+  tags: string[];
+  isFavorite: boolean;
+  folderId?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  isArchived?: boolean;
+}
 
 interface NoteCardProps {
   note: Note;
   onEdit: (note: Note) => void;
-  onDelete: (id: string) => void;
-  onToggleFavorite: (id: string) => void;
-  onArchive?: (id: string) => void;
-  onClick?: (note: Note) => void;
+  onDelete: (noteId: string) => void;
+  onToggleFavorite: (noteId: string) => void;
+  onArchive?: (noteId: string) => void;
+  className?: string;
+  compact?: boolean;
 }
 
 export const NoteCard: React.FC<NoteCardProps> = ({
@@ -17,121 +29,227 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   onDelete,
   onToggleFavorite,
   onArchive,
-  onClick
+  className = "",
+  compact = false
 }) => {
-  // Format date/Форматирование даты
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('ru-RU', {
-      day: 'numeric',
-      month: 'short',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Получить цвет тега / Get tag color
+  const getTagColor = (tagName: string): string => {
+    const savedColors = JSON.parse(localStorage.getItem('notesflow-tag-colors') || '{}');
+    const colors = ['#2D9EE0', '#3854F2', '#576EF2', '#2193B0', '#6DD5ED', '#15B9A7', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
+    return savedColors[tagName] || colors[tagName.length % colors.length];
   };
 
-  // Truncate content/Обрезка содержимого
-  const truncateContent = (content: string, maxLength: number = 150) => {
-    if (content.length <= maxLength) return content;
-    return content.substring(0, maxLength) + '...';
+  // Получить превью контента / Get content preview
+  const getContentPreview = (content: string, maxLength: number = 120): string => {
+    const textContent = content.replace(/<[^>]*>/g, ''); // Удалить HTML теги
+    return textContent.length > maxLength 
+      ? textContent.substring(0, maxLength) + '...' 
+      : textContent;
+  };
+
+  // Форматирование даты / Date formatting
+  const formatDate = (date: Date): string => {
+    const now = new Date();
+    const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffInDays === 0) return 'Сегодня';
+    if (diffInDays === 1) return 'Вчера';
+    if (diffInDays < 7) return `${diffInDays} дн. назад`;
+    if (diffInDays < 30) return `${Math.floor(diffInDays / 7)} нед. назад`;
+    return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+  };
+
+  // Обработчик удаления / Delete handler
+  const handleDelete = () => {
+    if (window.confirm('Удалить заметку? Это действие нельзя отменить.')) {
+      onDelete(note.id);
+    }
+    setIsMenuOpen(false);
+  };
+
+  // Обработчик архивирования / Archive handler
+  const handleArchive = () => {
+    if (onArchive) {
+      onArchive(note.id);
+    }
+    setIsMenuOpen(false);
   };
 
   return (
-    <Card className="hover:shadow-md transition-shadow cursor-pointer">
-      <div onClick={() => onClick?.(note)}>
-        {/* Header with title and favorite/Заголовок с названием и избранное */}
-        <div className="flex justify-between items-start mb-3">
-          <h3 className="text-lg font-semibold text-text-primary line-clamp-2 flex-1">
-            {note.title || 'Без названия'}
+    <Card 
+      className={`group relative transition-all duration-300 cursor-pointer ${
+        compact ? 'p-3' : 'p-4'
+      } ${className} ${
+        isHovered ? 'shadow-medium scale-[1.02]' : 'hover:shadow-medium hover:scale-[1.02]'
+      }`}
+      onClick={() => onEdit(note)}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => {
+        setIsHovered(false);
+        setIsMenuOpen(false);
+      }}
+    >
+      {/* Индикатор избранного / Favorite indicator */}
+      {note.isFavorite && (
+        <div className="absolute top-2 right-2 z-10">
+          <div className="w-3 h-3 bg-warning rounded-full animate-pulse" />
+        </div>
+      )}
+
+      {/* Основной контент / Main content */}
+      <div className="space-y-3">
+        {/* Заголовок заметки / Note title */}
+        <div className="flex items-start justify-between gap-3">
+          <h3 className={`font-semibold text-text-primary dark:text-dark-text-primary line-clamp-2 flex-1 ${
+            compact ? 'text-sm' : 'text-base'
+          }`}>
+            {note.title || 'Без заголовка'}
           </h3>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleFavorite(note.id);
-            }}
-            className={`ml-2 transition-colors ${
-              note.isFavorite 
-                ? 'text-yellow-500 hover:text-yellow-600' 
-                : 'text-text-muted hover:text-yellow-500'
-            }`}
-            aria-label={note.isFavorite ? 'Удалить из избранного' : 'Добавить в избранное'}
-            title={note.isFavorite ? 'Удалить из избранного' : 'Добавить в избранное'}
-          >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-            </svg>
-          </button>
+          
+          {/* Меню действий / Actions menu */}
+          <div className={`opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${
+            isMenuOpen ? 'opacity-100' : ''
+          }`}>
+            <div className="relative">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsMenuOpen(!isMenuOpen);
+                }}
+                className="p-1 text-text-muted hover:text-text-primary"
+              >
+                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+                </svg>
+              </Button>
+
+              {/* Выпадающее меню / Dropdown menu */}
+              {isMenuOpen && (
+                <div className="absolute top-full right-0 mt-1 w-48 bg-surface dark:bg-dark-surface border border-border dark:border-dark-border rounded-lg shadow-large z-20 animate-scale-in">
+                  <div className="py-1">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onToggleFavorite(note.id);
+                        setIsMenuOpen(false);
+                      }}
+                      className="w-full px-3 py-2 text-left text-sm hover:bg-neutral-100 dark:hover:bg-dark-border flex items-center gap-2"
+                    >
+                      <svg className={`h-4 w-4 ${note.isFavorite ? 'text-warning' : 'text-text-muted'}`} fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                      </svg>
+                      {note.isFavorite ? 'Убрать из избранного' : 'Добавить в избранное'}
+                    </button>
+                    
+                    {onArchive && !note.isArchived && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleArchive();
+                        }}
+                        className="w-full px-3 py-2 text-left text-sm hover:bg-neutral-100 dark:hover:bg-dark-border flex items-center gap-2"
+                      >
+                        <svg className="h-4 w-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8l4 4 6-6" />
+                        </svg>
+                        Архивировать
+                      </button>
+                    )}
+                    
+                    <hr className="border-border dark:border-dark-border my-1" />
+                    
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete();
+                      }}
+                      className="w-full px-3 py-2 text-left text-sm text-danger hover:bg-danger/10 flex items-center gap-2"
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Удалить
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Content preview/Превью содержимого */}
-        <p className="text-text-secondary text-sm mb-3 line-clamp-3">
-          {truncateContent(note.content)}
-        </p>
+        {/* Превью контента / Content preview */}
+        {!compact && note.content && (
+          <p className="text-text-secondary dark:text-dark-text-secondary text-sm line-clamp-3 leading-relaxed">
+            {getContentPreview(note.content)}
+          </p>
+        )}
 
-        {/* Tags/Теги */}
+        {/* Теги / Tags */}
         {note.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-3">
-            {note.tags.slice(0, 3).map(tag => (
+          <div className="flex flex-wrap gap-1.5">
+            {note.tags.slice(0, compact ? 2 : 4).map((tag) => (
               <span
                 key={tag}
-                className="px-2 py-1 bg-accent/20 text-accent text-xs rounded"
+                className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full text-white"
+                style={{ backgroundColor: getTagColor(tag) }}
               >
                 #{tag}
               </span>
             ))}
-            {note.tags.length > 3 && (
-              <span className="text-text-muted text-xs">
-                +{note.tags.length - 3} ещё
+            {note.tags.length > (compact ? 2 : 4) && (
+              <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-neutral-200 dark:bg-dark-border text-text-muted dark:text-dark-text-muted">
+                +{note.tags.length - (compact ? 2 : 4)}
               </span>
             )}
           </div>
         )}
 
-        {/* Footer with date and actions/Подвал с датой и действиями */}
-        <div className="flex justify-between items-center">
-          <span className="text-text-muted text-xs">
-            {formatDate(note.updatedAt)}
-          </span>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(note);
-              }}
-            >
-              Изменить
-            </Button>
-            {onArchive && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (window.confirm('Архивировать заметку?')) {
-                    onArchive(note.id);
-                  }
-                }}
-                title="Архивировать заметку"
-              >
-                📁
-              </Button>
+        {/* Метаданные / Metadata */}
+        <div className="flex items-center justify-between text-xs text-text-muted dark:text-dark-text-muted">
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1">
+              <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {formatDate(note.updatedAt)}
+            </span>
+            
+            {note.content && (
+              <span className="flex items-center gap-1">
+                <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+                </svg>
+                {note.content.replace(/<[^>]*>/g, '').split(' ').length} слов
+              </span>
             )}
-            <Button
-              size="sm"
-              variant="danger"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (window.confirm('Удалить заметку?')) {
-                  onDelete(note.id);
-                }
-              }}
-            >
-              Удалить
-            </Button>
+          </div>
+
+          {/* Индикаторы статуса / Status indicators */}
+          <div className="flex items-center gap-1">
+            {note.isFavorite && (
+              <svg className="h-3 w-3 text-warning" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+            )}
+            
+            {note.isArchived && (
+              <svg className="h-3 w-3 text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8l4 4 6-6" />
+              </svg>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Эффект наведения / Hover effect */}
+      <div className={`absolute inset-0 bg-gradient-primary opacity-0 rounded-lg transition-opacity duration-300 pointer-events-none ${
+        isHovered ? 'opacity-5' : ''
+      }`} />
     </Card>
   );
 };
