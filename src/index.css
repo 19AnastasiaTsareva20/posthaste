@@ -1,341 +1,293 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Базовые CSS переменные для тем / Base CSS variables for themes */
 :root {
-  /* PostHaste colors/Цвета PostHaste */
-  --color-primary: #597EE6;           /* Reliable blue/Надежный синий */
-  --color-primary-light: #75E0FC;     /* Clear cyan/Ясный бирюзовый */
-  --color-primary-dark: #4A6FD9;      /* Dark blue/Темно-синий */
-  --color-accent: #75E0FC;            /* Accent cyan/Акцентный бирюзовый */
+  /* Светлая тема / Light theme */
+  --color-background: #FAFBFC;
+  --color-surface: #FFFFFF;
+  --color-text-primary: #1A202C;
+  --color-text-secondary: #4A5568;
+  --color-text-muted: #718096;
+  --color-border: #E2E8F0;
   
-  /* Backgrounds/Фоны */
-  --color-background: #FFFFFF;        /* Pure white/Чистый белый */
-  --color-surface: #FAFBFF;           /* Light blue/Легкий голубой */
-  --color-surface-hover: #F4F7FF;     /* Hover state/Состояние hover */
+  /* Ваша любимая палитра / Your favorite palette */
+  --color-primary: #2D9EE0;
+  --color-primary-dark: #091E3A;
+  --color-primary-light: #6DD5ED;
+  --color-accent: #2193B0;
   
-  /* Borders/Границы */
-  --color-border: #E8EFFF;            /* Very light blue/Очень светло-синий */
-  --color-border-hover: #D6E4FF;      /* Active borders/Активные границы */
+  /* Дополнительные цвета / Additional colors */
+  --color-success: #15B9A7;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
+  --color-info: #3B82F6;
   
-  /* Text/Текст */
-  --color-text-primary: #313131;      /* Soft black/Мягкий черный */
-  --color-text-secondary: #597EE6;    /* Interface blue/Синий интерфейса */
-  --color-text-muted: #8B9DC3;        /* Muted blue/Приглушенный синий */
+  /* Градиенты / Gradients */
+  --gradient-primary: linear-gradient(135deg, #091E3A 0%, #2D9EE0 100%);
+  --gradient-accent: linear-gradient(135deg, #2193B0 0%, #6DD5ED 100%);
+  --gradient-card: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
   
-  /* Gradients/Градиенты */
-  --gradient-header: linear-gradient(135deg, #597EE6 0%, #75E0FC 100%);
-  --gradient-cta: linear-gradient(135deg, #75E0FC 0%, #597EE6 100%);
-  --gradient-subtle: linear-gradient(135deg, #FAFBFF 0%, #F4F7FF 100%);
+  /* Тени / Shadows */
+  --shadow-soft: 0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04);
+  --shadow-medium: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-large: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-primary: 0 10px 25px -3px rgba(45, 158, 224, 0.3);
   
-  /* Status colors/Статусные цвета */
-  --color-success: #22C55E;           /* Green success/Зеленый успех */
-  --color-warning: #F59E0B;           /* Orange warning/Оранжевое предупреждение */
-  --color-error: #EF4444;             /* Red error/Красная ошибка */
-  --color-info: #75E0FC;              /* Info cyan/Информационный бирюзовый */
+  /* Размеры и отступы / Sizes and spacing */
+  --border-radius: 0.75rem;
+  --border-radius-lg: 1rem;
+  --transition: all 0.2s ease-in-out;
+  --transition-slow: all 0.3s ease-in-out;
 }
 
-/* Reading mode/Режим чтения */
-[data-theme="dark"] {
-  --color-primary: #75E0FC;           /* Bright cyan/Яркий бирюзовый */
-  --color-primary-light: #93E7FF;     /* Light cyan/Светлый бирюзовый */
-  --color-primary-dark: #5DD4F7;      /* Dark cyan/Темный бирюзовый */
-  --color-accent: #75E0FC;
+/* Темная тема / Dark theme */
+.dark {
+  --color-background: #0F172A;
+  --color-surface: #1E293B;
+  --color-text-primary: #F1F5F9;
+  --color-text-secondary: #CBD5E0;
+  --color-text-muted: #94A3B8;
+  --color-border: #334155;
   
-  /* Dark backgrounds/Темные фоны */
-  --color-background: #0F1419;        /* Very dark/Очень темный */
-  --color-surface: #1A1F2E;           /* Dark blue/Темно-синий */
-  --color-surface-hover: #242B3D;     /* Darker hover/Hover темнее */
+  /* Ночная цветовая схема / Night color scheme */
+  --color-primary: #3854F2;
+  --color-primary-dark: #0820A6;
+  --color-accent: #576EF2;
   
-  --color-border: #2A3441;            /* Dark borders/Темные границы */
-  --color-border-hover: #3A4553;
+  /* Темные градиенты / Dark gradients */
+  --gradient-primary: linear-gradient(135deg, #0820A6 0%, #3854F2 100%);
+  --gradient-accent: linear-gradient(135deg, #576EF2 0%, #212940 100%);
+  --gradient-card: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
   
-  /* Dark text/Темный текст */
-  --color-text-primary: #F8FAFC;      /* Near white/Почти белый */
-  --color-text-secondary: #75E0FC;    /* Interface cyan/Бирюзовый интерфейса */
-  --color-text-muted: #94A3B8;        /* Muted/Приглушенный */
-  
-  /* Dark gradients/Темные градиенты */
-  --gradient-header: linear-gradient(135deg, #1A1F2E 0%, #242B3D 100%);
-  --gradient-cta: linear-gradient(135deg, #75E0FC 0%, #597EE6 100%);
-  --gradient-subtle: linear-gradient(135deg, #1A1F2E 0%, #242B3D 100%);
-  
-  /* Dark status/Темные статусы */
-  --color-success: #16A34A;
-  --color-warning: #D97706;
-  --color-error: #DC2626;
-  --color-info: #75E0FC;
+  /* Темные тени / Dark shadows */
+  --shadow-soft: 0 2px 15px -3px rgba(0, 0, 0, 0.3), 0 10px 20px -2px rgba(0, 0, 0, 0.2);
+  --shadow-medium: 0 10px 25px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --shadow-large: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+  --shadow-primary: 0 10px 25px -3px rgba(56, 84, 242, 0.4);
 }
 
-/* Base styles/Базовые стили */
-@layer base {
-  * {
-    border-color: var(--color-border);
-  }
+/* Режим чтения / Reading mode */
+.reading-mode {
+  --color-background: #FFFEF7;
+  --color-surface: #FFFFFF;
+  --color-text-primary: #2D3748;
+  --color-text-secondary: #4A5568;
   
-  body {
-    font-family: 'Inter', sans-serif;
-    background-color: var(--color-background);
-    color: var(--color-text-primary);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    line-height: 1.6;
-  }
-  
-  /* Readability/Читаемость */
-  h1, h2, h3, h4, h5, h6 {
-    color: var(--color-text-primary);
-    font-weight: 600;
-    line-height: 1.4;
-  }
-  
-  p {
-    color: var(--color-text-primary);
-    line-height: 1.7;
-  }
-  
-  /* Focus accessibility/Фокус для доступности */
-  *:focus {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 2px;
-  }
-}
-
-/* Custom utilities/Кастомные утилиты */
-@layer utilities {
-  /* Backgrounds/Фоны */
-  .bg-background { background-color: var(--color-background); }
-  .bg-surface { background-color: var(--color-surface); }
-  .bg-surface:hover { background-color: var(--color-surface-hover); }
-  .bg-primary { background-color: var(--color-primary); }
-  .bg-accent { background-color: var(--color-accent); }
-  
-  /* Text/Текст */
-  .text-primary { color: var(--color-text-primary); }
-  .text-secondary { color: var(--color-text-secondary); }
-  .text-muted { color: var(--color-text-muted); }
-  .text-accent { color: var(--color-accent); }
-  
-  /* Borders/Границы */
-  .border-default { border-color: var(--color-border); }
-  .border-hover:hover { border-color: var(--color-border-hover); }
-  
-  /* Gradients/Градиенты */
-  .bg-gradient-header { background: var(--gradient-header); }
-  .bg-gradient-cta { background: var(--gradient-cta); }
-  .bg-gradient-subtle { background: var(--gradient-subtle); }
-  
-  /* Status/Статусы */
-  .text-success { color: var(--color-success); }
-  .text-warning { color: var(--color-warning); }
-  .text-error { color: var(--color-error); }
-  .text-info { color: var(--color-info); }
-  
-  .bg-success { background-color: var(--color-success); }
-  .bg-warning { background-color: var(--color-warning); }
-  .bg-error { background-color: var(--color-error); }
-  .bg-info { background-color: var(--color-info); }
-}
-
-/* PostHaste components/Компоненты PostHaste */
-@layer components {
-  /* Buttons/Кнопки */
-  .btn-primary {
-    background: var(--gradient-cta);
-    @apply text-white px-6 py-3 rounded-lg font-medium;
-    @apply shadow-lg hover:shadow-xl hover:scale-105;
-    @apply transition-all duration-200;
-  }
-  
-  .btn-secondary {
-    background-color: var(--color-surface);
-    border: 1px solid var(--color-border);
-    color: var(--color-text-secondary);
-    @apply px-6 py-3 rounded-lg font-medium;
-    @apply transition-all duration-200;
-  }
-  
-  .btn-secondary:hover {
-    background-color: var(--color-surface-hover);
-    border-color: var(--color-border-hover);
-  }
-  
-  .btn-accent {
-    background-color: var(--color-accent);
-    @apply text-white px-6 py-3 rounded-lg font-medium;
-    @apply shadow-md hover:shadow-lg hover:scale-105;
-    @apply transition-all duration-200;
-  }
-  
-  /* Cards/Карточки */
-  .card {
-    background-color: var(--color-surface);
-    border: 1px solid var(--color-border);
-    @apply rounded-xl p-6;
-    @apply shadow-sm hover:shadow-md transition-all duration-200;
-  }
-  
-  .card-gradient {
-    background: var(--gradient-subtle);
-    border: 1px solid var(--color-border);
-    @apply rounded-xl p-6;
-    @apply shadow-sm hover:shadow-md transition-all duration-200;
-  }
-  
-  /* Inputs/Поля ввода */
-  .input {
-    background-color: var(--color-surface);
-    border: 1px solid var(--color-border);
-    @apply rounded-lg px-4 py-3;
-    color: var(--color-text-primary);
-    @apply transition-all duration-200;
-  }
-
-  .input:focus {
-    border-color: var(--color-accent);
-    box-shadow: 0 0 0 2px rgba(117, 224, 252, 0.2);
-    outline: none;
-  }
-
-  .input::placeholder {
-    color: var(--color-text-muted);
-  }
-  
-  /* Glass effect/Стеклянный эффект */
-  .glass-effect {
-    background: rgba(250, 251, 255, 0.8);
-    backdrop-filter: blur(12px);
-    border: 1px solid var(--color-border);
-  }
-  
-  [data-theme="dark"] .glass-effect {
-    background: rgba(26, 31, 46, 0.8);
-    backdrop-filter: blur(12px);
-    border: 1px solid var(--color-border);
-  }
-  
-  /* Animations/Анимации */
-  .smooth-enter {
-    animation: smoothEnter 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  @keyframes smoothEnter {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-}
-
-/* Editor styles/Стили редактора */
-.ProseMirror {
-  outline: none;
-  padding: 1.5rem;
-  color: var(--color-text-primary);
+  /* Улучшенная читаемость / Enhanced readability */
+  font-size: 18px;
   line-height: 1.8;
-  font-size: 1.1rem;
+  letter-spacing: 0.025em;
 }
 
-.ProseMirror h1 { 
+.dark.reading-mode {
+  --color-background: #1A202C;
+  --color-surface: #2D3748;
+  --color-text-primary: #F7FAFC;
+  --color-text-secondary: #E2E8F0;
+  
+  /* Комфорт для глаз в темноте / Eye comfort in dark */
+  filter: brightness(0.9);
+}
+
+/* Базовые стили / Base styles */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-background);
   color: var(--color-text-primary);
-  @apply text-3xl font-bold mb-4; 
-}
-.ProseMirror h2 { 
-  color: var(--color-text-primary);
-  @apply text-2xl font-semibold mb-3; 
-}
-.ProseMirror h3 { 
-  color: var(--color-text-secondary);
-  @apply text-xl font-medium mb-2; 
+  transition: var(--transition);
 }
 
-.ProseMirror p {
-  color: var(--color-text-primary);
-  @apply mb-4 leading-relaxed;
+/* Стили для элементов форм / Form element styles */
+.input {
+  @apply w-full px-4 py-2.5 text-base border border-border dark:border-dark-border rounded-lg 
+         bg-surface dark:bg-dark-surface text-text-primary dark:text-dark-text-primary
+         placeholder-text-muted dark:placeholder-dark-text-muted
+         focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary
+         transition-all duration-200;
 }
 
-.ProseMirror blockquote {
-  border-left: 4px solid var(--color-accent);
-  padding-left: 1rem;
-  color: var(--color-text-muted);
-  font-style: italic;
+.input:focus {
+  box-shadow: var(--shadow-primary);
 }
 
-.ProseMirror ul, .ProseMirror ol {
-  @apply ml-6 mb-4;
+/* Стили для кнопок по умолчанию / Default button styles */
+.btn-default {
+  background: var(--gradient-primary);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: var(--shadow-soft);
 }
 
-.ProseMirror li {
-  color: var(--color-text-primary);
-  @apply mb-1;
+.btn-default:hover {
+  box-shadow: var(--shadow-primary);
+  transform: translateY(-1px);
 }
 
-.ProseMirror p.is-editor-empty:first-child::before {
-  content: attr(data-placeholder);
-  float: left;
-  color: var(--color-text-muted);
-  pointer-events: none;
-  height: 0;
-  font-style: italic;
+/* Стили для карточек / Card styles */
+.card-default {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-soft);
+  transition: var(--transition);
 }
 
-/* Scrollbars/Скроллбары */
+.card-default:hover {
+  box-shadow: var(--shadow-medium);
+  transform: translateY(-2px);
+}
+
+/* Анимации / Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.2s ease-out;
+}
+
+/* Скроллбар / Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
-  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-surface);
-  border-radius: 4px;
+  background: var(--color-background);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-accent);
+  background: var(--color-primary);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary-dark);
+}
+
+/* Выделение текста / Text selection */
+::selection {
   background: var(--color-primary);
+  color: white;
 }
 
-/* Notifications/Уведомления */
-.notification {
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  @apply rounded-lg shadow-lg;
-  @apply p-4 min-w-[300px] max-w-[500px];
+::-moz-selection {
+  background: var(--color-primary);
+  color: white;
 }
 
-.notification-success { border-left: 4px solid var(--color-success); }
-.notification-warning { border-left: 4px solid var(--color-warning); }
-.notification-error { border-left: 4px solid var(--color-error); }
-.notification-info { border-left: 4px solid var(--color-info); }
+/* Фокус для доступности / Focus for accessibility */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2;
+}
 
-/* Reading mode extras/Дополнения режима чтения */
-@media (prefers-color-scheme: dark) {
-  .reading-mode {
-    filter: sepia(10%) hue-rotate(180deg);
+/* Утилиты для текста / Text utilities */
+.text-gradient {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Состояния загрузки / Loading states */
+.loading-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
   }
 }
 
-/* Accessibility/Доступность */
+/* Responsive typography / Адаптивная типографика */
+@media (max-width: 768px) {
+  .reading-mode {
+    font-size: 16px;
+    line-height: 1.7;
+  }
+}
+
+/* Режим высокой контрастности / High contrast mode */
+@media (prefers-contrast: high) {
+  :root {
+    --color-border: #000000;
+    --color-text-primary: #000000;
+  }
+  
+  .dark {
+    --color-border: #FFFFFF;
+    --color-text-primary: #FFFFFF;
+  }
+}
+
+/* Уменьшенная анимация для пользователей / Reduced motion for users */
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
-  }
-}
-
-/* Print/Печать */
-@media print {
-  * {
-    background: white !important;
-    color: black !important;
   }
 }
