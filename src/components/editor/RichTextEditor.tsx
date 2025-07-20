@@ -1,182 +1,186 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { FormattingToolbar } from './FormattingToolbar';
-import { ImageUploader } from '../ui/ImageUploader';
-import { TableInserter } from '../ui/TableInserter';
+import React, { useEffect, useRef, useState } from 'react';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Placeholder from '@tiptap/extension-placeholder';
+import TextAlign from '@tiptap/extension-text-align';
+import Underline from '@tiptap/extension-underline';
+import Highlight from '@tiptap/extension-highlight';
+import Link from '@tiptap/extension-link';
+import Image from '@tiptap/extension-image';
+import { Card } from './';
 
 interface RichTextEditorProps {
-  value: string;
-  onChange: (value: string) => void;
+  content: string;
+  onChange: (content: string) => void;
   placeholder?: string;
+  autoFocus?: boolean;
+  readOnly?: boolean;
   className?: string;
+  onSave?: () => void;
 }
 
 export const RichTextEditor: React.FC<RichTextEditorProps> = ({
-  value,
+  content,
   onChange,
   placeholder = "Начните писать...",
-  className = ""
+  autoFocus = false,
+  readOnly = false,
+  className = "",
+  onSave
 }) => {
+  const [isFocused, setIsFocused] = useState(false);
+  const [wordCount, setWordCount] = useState(0);
+  const [readingTime, setReadingTime] = useState(0);
   const editorRef = useRef<HTMLDivElement>(null);
-  const [showImageUploader, setShowImageUploader] = useState(false);
-  const [showTableInserter, setShowTableInserter] = useState(false);
 
-  // Initialize editor/Инициализация редактора
+  // Настройка редактора / Editor setup
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        heading: {
+          levels: [1, 2, 3, 4]
+        }
+      }),
+      Placeholder.configure({
+        placeholder,
+        emptyEditorClass: 'is-editor-empty',
+      }),
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
+      }),
+      Underline,
+      Highlight.configure({
+        HTMLAttributes: {
+          class: 'highlight',
+        },
+      }),
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          class: 'editor-link',
+        },
+      }),
+      Image.configure({
+        HTMLAttributes: {
+          class: 'editor-image',
+        },
+      }),
+    ],
+    content,
+    editable: !readOnly,
+    autofocus: autoFocus,
+    onUpdate: ({ editor }) => {
+      const html = editor.getHTML();
+      onChange(html);
+      
+      // Подсчет слов и времени чтения / Word count and reading time
+      const text = editor.getText();
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      setWordCount(words);
+      setReadingTime(Math.ceil(words / 200)); // 200 слов в минуту
+    },
+    onFocus: () => setIsFocused(true),
+    onBlur: () => setIsFocused(false),
+  });
+
+  // Горячие клавиши / Keyboard shortcuts
   useEffect(() => {
-    if (editorRef.current && editorRef.current.innerHTML !== value) {
-      editorRef.current.innerHTML = value;
-    }
-  }, [value]);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!editor || !isFocused) return;
 
-  // Handle content change/Обработка изменения содержимого
-  const handleInput = () => {
-    if (editorRef.current) {
-      const content = editorRef.current.innerHTML;
-      onChange(content);
-    }
-  };
-
-  // Execute formatting command/Выполнение команды форматирования
-  const executeCommand = (command: string, value?: string) => {
-    document.execCommand(command, false, value);
-    editorRef.current?.focus();
-    handleInput();
-  };
-
-  // Insert checklist/Вставка чек-листа
-  const insertChecklist = () => {
-    const checklistHtml = `
-      <div class="checklist-container" style="margin: 10px 0;">
-        <div class="checklist-item" style="display: flex; align-items: center; margin: 5px 0;">
-          <input type="checkbox" style="margin-right: 8px; cursor: pointer;" onchange="this.nextSibling.style.textDecoration = this.checked ? 'line-through' : 'none'">
-          <span style="flex: 1;">Новая задача</span>
-        </div>
-        <div class="checklist-item" style="display: flex; align-items: center; margin: 5px 0;">
-          <input type="checkbox" style="margin-right: 8px; cursor: pointer;" onchange="this.nextSibling.style.textDecoration = this.checked ? 'line-through' : 'none'">
-          <span style="flex: 1;">Еще одна задача</span>
-        </div>
-      </div>
-    `;
-    executeCommand('insertHTML', checklistHtml);
-  };
-
-  // Handle keyboard shortcuts/Обработка горячих клавиш
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Ctrl+B for bold/Ctrl+B для жирного
-    if (e.ctrlKey && e.key === 'b') {
-      e.preventDefault();
-      executeCommand('bold');
-    }
-    // Ctrl+I for italic/Ctrl+I для курсива
-    else if (e.ctrlKey && e.key === 'i') {
-      e.preventDefault();
-      executeCommand('italic');
-    }
-    // Ctrl+U for underline/Ctrl+U для подчеркивания
-    else if (e.ctrlKey && e.key === 'u') {
-      e.preventDefault();
-      executeCommand('underline');
-    }
-    // Tab for indent/Tab для отступа
-    else if (e.key === 'Tab') {
-      e.preventDefault();
-      executeCommand('indent');
-    }
-    // Shift+Tab for outdent/Shift+Tab для уменьшения отступа
-    else if (e.shiftKey && e.key === 'Tab') {
-      e.preventDefault();
-      executeCommand('outdent');
-    }
-  };
-
-  // Handle image insertion/Обработка вставки изображения
-  const handleImageInsert = (imageData: string) => {
-    const img = `<img src="${imageData}" alt="Изображение" style="max-width: 100%; height: auto; border-radius: 4px; margin: 10px 0;" />`;
-    executeCommand('insertHTML', img);
-  };
-
-  // Handle table insertion/Обработка вставки таблицы
-  const handleTableInsert = (tableHtml: string) => {
-    executeCommand('insertHTML', tableHtml);
-  };
-
-  // Handle paste/Обработка вставки
-  const handlePaste = (e: React.ClipboardEvent) => {
-    e.preventDefault();
-    
-    // Handle image paste/Обработка вставки изображения
-    const items = Array.from(e.clipboardData.items);
-    const imageItem = items.find(item => item.type.startsWith('image/'));
-    
-    if (imageItem) {
-      const file = imageItem.getAsFile();
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const result = event.target?.result as string;
-          handleImageInsert(result);
-        };
-        reader.readAsDataURL(file);
-        return;
+      // Ctrl+S или Cmd+S для сохранения / Ctrl+S or Cmd+S to save
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        onSave?.();
       }
-    }
-    
-    // Handle text paste/Обработка вставки текста
-    const text = e.clipboardData.getData('text/plain');
-    executeCommand('insertText', text);
-  };
+    };
 
-  // Handle checkbox clicks in editor/Обработка кликов по чекбоксам в редакторе
-  const handleClick = (e: React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.tagName === 'INPUT' && target.getAttribute('type') === 'checkbox') {
-      // Allow checkbox interaction/Разрешить взаимодействие с чекбоксом
-      setTimeout(() => {
-        handleInput();
-      }, 0);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [editor, isFocused, onSave]);
+
+  // Обновление контента / Update content
+  useEffect(() => {
+    if (editor && content !== editor.getHTML()) {
+      editor.commands.setContent(content);
     }
-  };
+  }, [content, editor]);
+
+  if (!editor) {
+    return (
+      <Card className={`${className} animate-pulse`}>
+        <div className="h-64 bg-neutral-100 dark:bg-dark-surface rounded-lg" />
+      </Card>
+    );
+  }
 
   return (
-    <div className={`border border-default rounded-lg overflow-hidden ${className}`}>
-      {/* Formatting toolbar/Панель форматирования */}
-      <FormattingToolbar
-        onFormat={executeCommand}
-        onImageUpload={() => setShowImageUploader(true)}
-        onInsertChecklist={insertChecklist}
-        onInsertTable={() => setShowTableInserter(true)}
-      />
-      
-      {/* Editor content/Содержимое редактора */}
-      <div
-        ref={editorRef}
-        contentEditable
-        className="min-h-[300px] p-4 focus:outline-none bg-background"
-        onInput={handleInput}
-        onKeyDown={handleKeyDown}
-        onPaste={handlePaste}
-        onClick={handleClick}
-        data-placeholder={placeholder}
-        style={{
-          fontSize: '16px',
-          lineHeight: '1.6',
-          color: 'var(--color-text-primary)'
-        }}
-        suppressContentEditableWarning={true}
-      />
-      
-      {/* Image uploader modal/Модальное окно загрузки изображений */}
-      <ImageUploader
-        isOpen={showImageUploader}
-        onClose={() => setShowImageUploader(false)}
-        onImageInsert={handleImageInsert}
-      />
+    <Card 
+      className={`transition-all duration-300 ${className} ${
+        isFocused ? 'ring-2 ring-primary/30 shadow-primary' : ''
+      }`}
+      hover={false}
+    >
+      <div className="space-y-4">
+        {/* Редактор / Editor */}
+        <div 
+          ref={editorRef}
+          className="prose prose-lg dark:prose-invert max-w-none focus-within:outline-none"
+        >
+          <EditorContent 
+            editor={editor}
+            className="min-h-[300px] focus:outline-none [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[300px] [&_.ProseMirror]:p-4 [&_.ProseMirror]:text-text-primary [&_.ProseMirror]:dark:text-dark-text-primary [&_.ProseMirror]:leading-relaxed"
+          />
+        </div>
 
-      {/* Table inserter modal/Модальное окно вставки таблиц */}
-      <TableInserter
-        isOpen={showTableInserter}
-        onClose={() => setShowTableInserter(false)}
-        onInsert={handleTableInsert}
-      />
-    </div>
+        {/* Статистика и индикаторы / Statistics and indicators */}
+        {!readOnly && (
+          <div className="flex items-center justify-between text-sm text-text-muted dark:text-dark-text-muted border-t border-border dark:border-dark-border pt-3">
+            <div className="flex items-center gap-4">
+              <span className="flex items-center gap-1">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+                </svg>
+                {wordCount} слов
+              </span>
+              
+              {readingTime > 0 && (
+                <span className="flex items-center gap-1">
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  ~{readingTime} мин чтения
+                </span>
+              )}
+              
+              {isFocused && (
+                <span className="flex items-center gap-1 text-primary dark:text-night-primary">
+                  <div className="w-2 h-2 bg-primary dark:bg-night-primary rounded-full animate-pulse" />
+                  Редактирование
+                </span>
+              )}
+            </div>
+
+            {/* Горячие клавиши / Keyboard shortcuts */}
+            <div className="hidden sm:flex items-center gap-3 text-xs">
+              <kbd className="px-2 py-1 bg-neutral-100 dark:bg-dark-border rounded">⌘S</kbd>
+              <span>сохранить</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Режим чтения / Reading mode */}
+      {readOnly && (
+        <div className="absolute top-4 right-4 z-10">
+          <div className="flex items-center gap-1 px-2 py-1 bg-info/10 text-info rounded-full text-xs">
+            <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+            </svg>
+            Режим чтения
+          </div>
+        </div>
+      )}
+    </Card>
   );
 };
