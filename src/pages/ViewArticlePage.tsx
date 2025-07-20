@@ -1,350 +1,355 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Button, Card } from '../components/ui';
-import { useToast } from '../components/ui/NotificationSystem';
-import { exportToMarkdown, exportToHTML, exportToJSON, exportToText, downloadFile } from '../utils/exportUtils';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Card, Button } from '../components/ui';
 
-interface Article {
+interface Note {
   id: string;
   title: string;
   content: string;
-  isPublic: boolean;
   tags: string[];
-  createdAt: string;
-  updatedAt: string;
+  isFavorite: boolean;
+  folderId?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  isArchived?: boolean;
 }
 
 export const ViewArticlePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const toast = useToast();
-  const [article, setArticle] = useState<Article | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [note, setNote] = useState<Note | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) {
-      navigate('/articles');
+      setError('ID заметки не указан');
+      setIsLoading(false);
       return;
     }
 
-    const savedArticles = JSON.parse(localStorage.getItem('posthaste-articles') || '[]');
-    const foundArticle = savedArticles.find((a: Article) => a.id === id);
-    
-    if (foundArticle) {
-      setArticle(foundArticle);
-    } else {
-      toast.error('Статья не найдена', 'Возможно, она была удалена');
-      navigate('/articles');
+    try {
+      const savedNotes = localStorage.getItem('notesflow-notes');
+      if (savedNotes) {
+        const notes: Note[] = JSON.parse(savedNotes).map((note: any) => ({
+          ...note,
+          createdAt: new Date(note.createdAt),
+          updatedAt: new Date(note.updatedAt)
+        }));
+        
+        const foundNote = notes.find(n => n.id === id);
+        if (foundNote) {
+          setNote(foundNote);
+        } else {
+          setError('Заметка не найдена');
+        }
+      } else {
+        setError('Заметки не найдены');
+      }
+    } catch (error) {
+      console.error('Error loading note:', error);
+      setError('Ошибка при загрузке заметки');
+    } finally {
+      setIsLoading(false);
     }
-    
-    setLoading(false);
-  }, [id, navigate, toast]);
+  }, [id]);
 
-  // Функция экспорта статьи/Article export function
-  const exportArticle = (format: 'markdown' | 'html' | 'json' | 'text') => {
-    if (!article) return;
-
-    const filename = `${article.title.replace(/[^a-zA-Zа-яёА-ЯЁ0-9]/g, '_')}_${article.id}`;
-    const timestamp = new Date().toISOString().split('T')[0];
-
-    switch (format) {
-      case 'markdown':
-        downloadFile(
-          exportToMarkdown(article),
-          `${filename}_${timestamp}.md`,
-          'text/markdown'
-        );
-        toast.success('Экспорт в Markdown', 'Файл успешно скачан');
-        break;
-      
-      case 'html':
-        downloadFile(
-          exportToHTML(article),
-          `${filename}_${timestamp}.html`,
-          'text/html'
-        );
-        toast.success('Экспорт в HTML', 'Файл успешно скачан');
-        break;
-      
-      case 'json':
-        downloadFile(
-          exportToJSON(article),
-          `${filename}_${timestamp}.json`,
-          'application/json'
-        );
-        toast.success('Экспорт в JSON', 'Файл успешно скачан');
-        break;
-      
-      case 'text':
-        downloadFile(
-          exportToText(article),
-          `${filename}_${timestamp}.txt`,
-          'text/plain'
-        );
-        toast.success('Экспорт в текст', 'Файл успешно скачан');
-        break;
+  const handleEdit = () => {
+    if (note) {
+      navigate(`/edit/${note.id}`);
     }
   };
 
-  const deleteArticle = () => {
-    if (!article) return;
-    
-    if (window.confirm('Вы уверены, что хотите удалить эту статью?')) {
-      const savedArticles = JSON.parse(localStorage.getItem('posthaste-articles') || '[]');
-      const updatedArticles = savedArticles.filter((a: Article) => a.id !== article.id);
-      localStorage.setItem('posthaste-articles', JSON.stringify(updatedArticles));
-      
-      toast.success('Статья удалена', 'Статья была успешно удалена');
-      navigate('/articles');
+  const handleToggleFavorite = () => {
+    if (!note) return;
+
+    try {
+      const savedNotes = localStorage.getItem('notesflow-notes');
+      if (savedNotes) {
+        const notes: Note[] = JSON.parse(savedNotes);
+        const updatedNotes = notes.map(n =>
+          n.id === note.id ? { ...n, isFavorite: !n.isFavorite } : n
+        );
+        
+        localStorage.setItem('notesflow-notes', JSON.stringify(updatedNotes));
+        setNote({ ...note, isFavorite: !note.isFavorite });
+      }
+    } catch (error) {
+      console.error('Error updating favorite status:', error);
     }
   };
 
-  if (loading) {
+  const handleArchive = () => {
+    if (!note) return;
+
+    try {
+      const savedNotes = localStorage.getItem('notesflow-notes');
+      if (savedNotes) {
+        const notes: Note[] = JSON.parse(savedNotes);
+        const updatedNotes = notes.map(n =>
+          n.id === note.id ? { ...n, isArchived: true } : n
+        );
+        
+        localStorage.setItem('notesflow-notes', JSON.stringify(updatedNotes));
+        navigate('/');
+      }
+    } catch (error) {
+      console.error('Error archiving note:', error);
+    }
+  };
+
+  const handleDelete = () => {
+    if (!note) return;
+
+    if (window.confirm('Вы уверены, что хотите удалить эту заметку?')) {
+      try {
+        const savedNotes = localStorage.getItem('notesflow-notes');
+        if (savedNotes) {
+          const notes: Note[] = JSON.parse(savedNotes);
+          const updatedNotes = notes.filter(n => n.id !== note.id);
+          
+          localStorage.setItem('notesflow-notes', JSON.stringify(updatedNotes));
+          navigate('/');
+        }
+      } catch (error) {
+        console.error('Error deleting note:', error);
+      }
+    }
+  };
+
+  const getTagColor = (tagName: string): string => {
+    const savedColors = JSON.parse(localStorage.getItem('notesflow-tag-colors') || '{}');
+    const colors = ['#2D9EE0', '#3854F2', '#576EF2', '#2193B0', '#6DD5ED', '#15B9A7', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
+    return savedColors[tagName] || colors[tagName.length % colors.length];
+  };
+
+  const getFolderName = (folderId: string | undefined): string => {
+    if (!folderId) return 'Без папки';
+    
+    try {
+      const savedFolders = localStorage.getItem('notesflow-folders');
+      if (savedFolders) {
+        const folders = JSON.parse(savedFolders);
+        const folder = folders.find((f: any) => f.id === folderId);
+        return folder ? folder.name : 'Неизвестная папка';
+      }
+    } catch (error) {
+      console.error('Error loading folders:', error);
+    }
+    
+    return 'Без папки';
+  };
+
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background dark:bg-dark-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl mb-4">⏳</div>
-          <p className="text-text-secondary">Загрузка статьи...</p>
+        <div className="flex items-center gap-3 text-text-primary dark:text-dark-text-primary">
+          <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+          <span>Загрузка заметки...</span>
         </div>
       </div>
     );
   }
 
-  if (!article) {
+  if (error || !note) {
     return (
       <div className="min-h-screen bg-background dark:bg-dark-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl mb-4">❌</div>
-          <p className="text-text-secondary mb-4">Статья не найдена</p>
-          <Link to="/articles">
-            <Button>Вернуться к статьям</Button>
-          </Link>
-        </div>
+        <Card className="max-w-md w-full p-8 text-center">
+          <div className="w-16 h-16 bg-danger/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="h-8 w-8 text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h2 className="text-lg font-semibold text-text-primary dark:text-dark-text-primary mb-2">
+            {error}
+          </h2>
+          <p className="text-text-secondary dark:text-dark-text-secondary mb-4">
+            Возможно, заметка была удалена или перемещена
+          </p>
+          <Button variant="primary" onClick={() => navigate('/')}>
+            Вернуться к списку заметок
+          </Button>
+        </Card>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-background dark:bg-dark-background">
-      {/* Хэдер/Header */}
-      <header className="bg-gradient-header p-4 sticky top-0 z-10">
-        <div className="flex justify-between items-center max-w-7xl mx-auto">
-          <div className="flex items-center gap-4">
-            <Link 
-              to="/articles" 
-              className="text-white/80 hover:text-white transition-colors"
-            >
-              ← Назад к статьям
-            </Link>
-            <div>
-              <h1 className="text-2xl font-bold text-white truncate">
-                {article.title}
+      <div className="max-w-4xl mx-auto p-4 space-y-6">
+        {/* Заголовок страницы / Page header */}
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                onClick={() => navigate('/')}
+                className="p-2"
+                title="Назад к списку заметок"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+              </Button>
+              <h1 className="text-2xl font-bold text-text-primary dark:text-dark-text-primary">
+                Просмотр заметки
               </h1>
-              <p className="text-white/80 text-sm">
-                {article.isPublic ? '🌍 Публичная' : '🔒 Приватная'} • 
-                Создано {new Date(article.createdAt).toLocaleDateString()}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                onClick={handleToggleFavorite}
+                className={`p-2 ${note.isFavorite ? 'text-warning' : 'text-text-secondary dark:text-dark-text-secondary'}`}
+                title={note.isFavorite ? 'Убрать из избранного' : 'Добавить в избранное'}
+              >
+                <svg className="h-5 w-5" fill={note.isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                </svg>
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={handleEdit}
+                className="flex items-center gap-2"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Редактировать
+              </Button>
+
+              <div className="relative group">
+                <Button
+                  variant="ghost"
+                  className="p-2"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                  </svg>
+                </Button>
+                
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-dark-surface border border-border dark:border-dark-border rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                  <button
+                    onClick={handleArchive}
+                    className="w-full px-4 py-2 text-left text-sm text-text-primary dark:text-dark-text-primary hover:bg-neutral-50 dark:hover:bg-dark-background flex items-center gap-2 first:rounded-t-lg"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8l4 4m0 0l4-4m-4 4V3m0 14l-4-4m4 4l4-4" />
+                    </svg>
+                    Архивировать
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    className="w-full px-4 py-2 text-left text-sm text-danger hover:bg-danger/10 flex items-center gap-2 last:rounded-b-lg"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Удалить
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Заголовок заметки / Note title */}
+          <h1 className="text-4xl font-bold text-text-primary dark:text-dark-text-primary mb-6">
+            {note.title || 'Без заголовка'}
+          </h1>
+
+          {/* Метаданные / Metadata */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-text-secondary dark:text-dark-text-secondary uppercase tracking-wide">
+                Папка
+              </label>
+              <p className="text-sm text-text-primary dark:text-dark-text-primary">
+                {getFolderName(note.folderId)}
               </p>
             </div>
-          </div>
-          
-          <div className="flex gap-2">
-            <Link to={`/create?edit=${article.id}`}>
-              <Button
-                className="bg-white/20 text-white hover:bg-white/30 border-white/30"
-                size="sm"
-              >
-                ✏️ Редактировать
-              </Button>
-            </Link>
-            <Button
-              onClick={deleteArticle}
-              className="bg-red-500/20 text-white hover:bg-red-500/30 border-red-500/30"
-              size="sm"
-            >
-              🗑️ Удалить
-            </Button>
-          </div>
-        </div>
-      </header>
 
-      {/* Основной контент/Main content */}
-      <main className="container mx-auto p-6 max-w-7xl">
-        <div className="grid lg:grid-cols-4 gap-6">
-          {/* Основное содержимое статьи/Main article content */}
-          <div className="lg:col-span-3">
-            <Card>
-              <article className="prose prose-lg max-w-none dark:prose-invert">
-                <div 
-                  dangerouslySetInnerHTML={{ __html: article.content }}
-                  className="text-text-primary dark:text-dark-text-primary"
-                />
-              </article>
-            </Card>
-          </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-text-secondary dark:text-dark-text-secondary uppercase tracking-wide">
+                Создано
+              </label>
+              <p className="text-sm text-text-primary dark:text-dark-text-primary">
+                {note.createdAt.toLocaleDateString('ru-RU', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </p>
+            </div>
 
-          {/* Боковая панель с информацией/Sidebar with info */}
-          <div className="space-y-6">
-            {/* Информация о статье/Article info */}
-            <Card>
-              <h3 className="font-semibold text-text-primary dark:text-dark-text-primary mb-4">
-                📊 Информация
-              </h3>
-              <div className="space-y-3 text-sm">
-                <div>
-                  <span className="text-text-secondary dark:text-dark-text-secondary">Статус:</span>
-                  <div className="mt-1">
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      article.isPublic 
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                        : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
-                    }`}>
-                      {article.isPublic ? '🌍 Публичная' : '🔒 Приватная'}
-                    </span>
-                  </div>
-                </div>
-                
-                <div>
-                  <span className="text-text-secondary dark:text-dark-text-secondary">Создано:</span>
-                  <div className="font-mono text-xs mt-1">
-                    {new Date(article.createdAt).toLocaleString()}
-                  </div>
-                </div>
-                
-                {article.updatedAt !== article.createdAt && (
-                  <div>
-                    <span className="text-text-secondary dark:text-dark-text-secondary">Обновлено:</span>
-                    <div className="font-mono text-xs mt-1">
-                      {new Date(article.updatedAt).toLocaleString()}
-                    </div>
-                  </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-text-secondary dark:text-dark-text-secondary uppercase tracking-wide">
+                Изменено
+              </label>
+              <p className="text-sm text-text-primary dark:text-dark-text-primary">
+                {note.updatedAt.toLocaleDateString('ru-RU', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-text-secondary dark:text-dark-text-secondary uppercase tracking-wide">
+                Статус
+              </label>
+              <div className="flex items-center gap-2">
+                {note.isFavorite && (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-warning/10 text-warning rounded-full text-xs font-medium">
+                    <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                    </svg>
+                    Избранное
+                  </span>
                 )}
-                
-                <div>
-                  <span className="text-text-secondary dark:text-dark-text-secondary">ID:</span>
-                  <div className="font-mono text-xs mt-1 break-all">
-                    {article.id}
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            {/* Теги/Tags */}
-            {article.tags.length > 0 && (
-              <Card>
-                <h3 className="font-semibold text-text-primary dark:text-dark-text-primary mb-4">
-                  🏷️ Теги
-                </h3>
-                <div className="flex gap-2 flex-wrap">
-                  {article.tags.map(tag => (
-                    <span
-                      key={tag}
-                      className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-              </Card>
-            )}
-
-            {/* Статистика/Statistics */}
-            <Card>
-              <h3 className="font-semibold text-text-primary dark:text-dark-text-primary mb-4">
-                📈 Статистика
-              </h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span>Символов:</span>
-                  <span className="font-mono">
-                    {article.content.replace(/<[^>]*>/g, '').length}
+                {!note.isFavorite && (
+                  <span className="text-sm text-text-secondary dark:text-dark-text-secondary">
+                    Обычная
                   </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Слов:</span>
-                  <span className="font-mono">
-                    {article.content.replace(/<[^>]*>/g, '').split(/\s+/).filter(word => word.length > 0).length}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Тегов:</span>
-                  <span className="font-mono">{article.tags.length}</span>
-                </div>
-              </div>
-            </Card>
-          </div>
-        </div>
-
-        {/* Действия/Actions */}
-        <Card className="mt-6">
-          <h3 className="font-semibold text-text-primary dark:text-dark-text-primary mb-4">
-            Действия
-          </h3>
-          <div className="space-y-4">
-            {/* Экспорт/Export */}
-            <div>
-              <h4 className="text-sm font-medium text-text-primary dark:text-dark-text-primary mb-2">
-                📤 Экспорт статьи
-              </h4>
-              <div className="flex gap-2 flex-wrap">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => exportArticle('markdown')}
-                >
-                  📝 Markdown
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => exportArticle('html')}
-                >
-                  🌐 HTML
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => exportArticle('json')}
-                >
-                  🔧 JSON
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => exportArticle('text')}
-                >
-                  📄 Текст
-                </Button>
-              </div>
-            </div>
-
-            {/* Другие действия/Other actions */}
-            <div>
-              <h4 className="text-sm font-medium text-text-primary dark:text-dark-text-primary mb-2">
-                ⚡ Быстрые действия
-              </h4>
-              <div className="flex gap-2 flex-wrap">
-                <Link to="/create">
-                  <Button variant="outline" size="sm">
-                    ✍️ Создать новую статью
-                  </Button>
-                </Link>
-                <Link to="/articles">
-                  <Button variant="outline" size="sm">
-                    📚 Все мои статьи
-                  </Button>
-                </Link>
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.print()}
-                >
-                  🖨️ Печать
-                </Button>
+                )}
               </div>
             </div>
           </div>
+
+          {/* Теги / Tags */}
+          {note.tags.length > 0 && (
+            <div className="space-y-3">
+              <label className="block text-xs font-medium text-text-secondary dark:text-dark-text-secondary uppercase tracking-wide">
+                Теги
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {note.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center px-3 py-1 text-sm font-medium rounded-full text-white"
+                    style={{ backgroundColor: getTagColor(tag) }}
+                  >
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </Card>
-      </main>
+
+        {/* Содержимое заметки / Note content */}
+        <Card className="p-6">
+          <div 
+            className="prose prose-lg max-w-none dark:prose-invert prose-headings:text-text-primary dark:prose-headings:text-dark-text-primary prose-p:text-text-primary dark:prose-p:text-dark-text-primary prose-a:text-primary dark:prose-a:text-night-primary prose-strong:text-text-primary dark:prose-strong:text-dark-text-primary prose-code:text-text-primary dark:prose-code:text-dark-text-primary prose-blockquote:text-text-secondary dark:prose-blockquote:text-dark-text-secondary prose-blockquote:border-primary dark:prose-blockquote:border-night-primary"
+            dangerouslySetInnerHTML={{ __html: note.content || '<p class="text-text-secondary dark:text-dark-text-secondary italic">Содержимое отсутствует</p>' }}
+          />
+        </Card>
+      </div>
     </div>
   );
 };
