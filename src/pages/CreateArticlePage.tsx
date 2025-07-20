@@ -1,274 +1,167 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Card, Button, RichTextEditor, FormattingToolbar, ImageUploader, TableInserter } from '../components/ui';
-import { useEditor } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Placeholder from '@tiptap/extension-placeholder';
-import TextAlign from '@tiptap/extension-text-align';
-import Underline from '@tiptap/extension-underline';
-import Highlight from '@tiptap/extension-highlight';
-import Link from '@tiptap/extension-link';
-import Image from '@tiptap/extension-image';
-
-interface Note {
-  id: string;
-  title: string;
-  content: string;
-  tags: string[];
-  isFavorite: boolean;
-  folderId?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { Card, Button, RichTextEditor, showNotification } from '../components/ui';
 
 export const CreateArticlePage: React.FC = () => {
   const navigate = useNavigate();
-  const { id } = useParams();
-  const isEditing = Boolean(id);
-
+  const { id: editingId } = useParams();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
-  const [selectedFolderId, setSelectedFolderId] = useState<string | undefined>();
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [showImageUploader, setShowImageUploader] = useState(false);
-  const [showTableInserter, setShowTableInserter] = useState(false);
-  const [showExitConfirm, setShowExitConfirm] = useState(false);
-
   const titleInputRef = useRef<HTMLInputElement>(null);
-  const autoSaveTimerRef = useRef<NodeJS.Timeout>();
 
-  // Настройка редактора / Editor setup
-  const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        heading: { levels: [1, 2, 3, 4] }
-      }),
-      Placeholder.configure({
-        placeholder: 'Начните писать вашу заметку...',
-      }),
-      TextAlign.configure({
-        types: ['heading', 'paragraph'],
-      }),
-      Underline,
-      Highlight,
-      Link,
-      Image,
-    ],
-    content,
-    onUpdate: ({ editor }) => {
-      const html = editor.getHTML();
-      setContent(html);
-      setHasUnsavedChanges(true);
-      scheduleAutoSave();
-    },
-  });
-
-  // Автосохранение / Auto-save
-  const scheduleAutoSave = () => {
-    if (autoSaveTimerRef.current) {
-      clearTimeout(autoSaveTimerRef.current);
-    }
-    
-    autoSaveTimerRef.current = setTimeout(() => {
-      if (hasUnsavedChanges && (title.trim() || content.trim())) {
-        handleAutoSave();
-      }
-    }, 2000); // Автосохранение через 2 секунды
-  };
-
-  // Загрузка заметки для редактирования / Load note for editing
+  // Загрузка существующей заметки для редактирования
   useEffect(() => {
-    if (isEditing && id) {
+    if (editingId) {
       setIsLoading(true);
-      const savedNotes = localStorage.getItem('notesflow-notes');
-      if (savedNotes) {
-        try {
-          const notes: Note[] = JSON.parse(savedNotes);
-          const note = notes.find(n => n.id === id);
-          if (note) {
-            setTitle(note.title);
-            setContent(note.content);
-            setTags(note.tags);
-            setSelectedFolderId(note.folderId);
-            setIsFavorite(note.isFavorite);
-            if (editor) {
-              editor.commands.setContent(note.content);
-            }
+      try {
+        const savedNotes = localStorage.getItem('notesflow-notes');
+        if (savedNotes) {
+          const notes = JSON.parse(savedNotes);
+          const noteToEdit = notes.find((note: any) => note.id === editingId);
+          
+          if (noteToEdit) {
+            setTitle(noteToEdit.title);
+            setContent(noteToEdit.content);
+            setTags(noteToEdit.tags || []);
+          } else {
+            showNotification.error('Заметка не найдена');
+            navigate('/');
           }
-        } catch (error) {
-          console.error('Error loading note:', error);
         }
+      } catch (error) {
+        console.error('Error loading note:', error);
+        showNotification.error('Ошибка при загрузке заметки');
+        navigate('/');
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     } else {
-      // Фокус на заголовке для новой заметки / Focus title for new note
+      // Фокус на поле заголовка для новой заметки
       setTimeout(() => {
         titleInputRef.current?.focus();
       }, 100);
     }
-  }, [id, isEditing, editor]);
+  }, [editingId, navigate]);
 
-  // Получить папки / Get folders
-  const getFolders = () => {
-    const savedFolders = localStorage.getItem('notesflow-folders');
-    return savedFolders ? JSON.parse(savedFolders) : [];
-  };
+  // Отслеживание изменений для предупреждения о несохраненных данных
+  useEffect(() => {
+    setHasUnsavedChanges(title.trim() !== '' || content.trim() !== '' || tags.length > 0);
+  }, [title, content, tags]);
 
-  // Обработка изменения заголовка / Handle title change
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTitle(e.target.value);
-    setHasUnsavedChanges(true);
-    scheduleAutoSave();
-  };
-
-  // Добавление тега / Add tag
-  const addTag = (tagName: string) => {
-    const trimmedTag = tagName.trim().toLowerCase();
-    if (trimmedTag && !tags.includes(trimmedTag)) {
-      setTags([...tags, trimmedTag]);
-      setHasUnsavedChanges(true);
-    }
-    setTagInput('');
-  };
-
-  // Удаление тега / Remove tag
-  const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
-    setHasUnsavedChanges(true);
-  };
-
-  // Обработка ввода тегов / Handle tag input
-  const handleTagInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ' ' || e.key === ',') {
-      e.preventDefault();
-      addTag(tagInput);
-    } else if (e.key === 'Backspace' && tagInput === '' && tags.length > 0) {
-      removeTag(tags[tags.length - 1]);
-    }
-  };
-
-  // Автосохранение / Auto save
-  const handleAutoSave = async () => {
-    if (!title.trim() && !content.trim()) return;
-
-    try {
-      await saveNote(false);
-      setLastSaved(new Date());
-      setHasUnsavedChanges(false);
-    } catch (error) {
-      console.error('Auto-save failed:', error);
-    }
-  };
-
-  // Сохранение заметки / Save note
-  const saveNote = async (redirect: boolean = true) => {
-    if (!title.trim() && !content.trim()) {
-      if (redirect) {
-        alert('Заполните заголовок или содержание заметки');
+  // Предупреждение при попытке покинуть страницу с несохраненными изменениями
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
       }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  // Обработка добавления тегов
+  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      const newTag = tagInput.trim().toLowerCase();
+      
+      if (newTag && !tags.includes(newTag)) {
+        setTags([...tags, newTag]);
+        setTagInput('');
+      }
+    }
+  };
+
+  // Удаление тега
+  const handleRemoveTag = (tagToRemove: string) => {
+    setTags(tags.filter(tag => tag !== tagToRemove));
+  };
+
+  // Сохранение заметки
+  const handleSave = async () => {
+    if (!title.trim()) {
+      showNotification.warning('Пожалуйста, введите название заметки');
+      titleInputRef.current?.focus();
       return;
     }
 
-    setIsSaving(true);
-
     try {
+      setIsSaving(true);
+      
       const savedNotes = localStorage.getItem('notesflow-notes');
-      const notes: Note[] = savedNotes ? JSON.parse(savedNotes) : [];
-
+      const existingNotes = savedNotes ? JSON.parse(savedNotes) : [];
+      
       const noteData = {
-        id: isEditing ? id! : `note-${Date.now()}`,
-        title: title.trim() || 'Без заголовка',
-        content: content.trim(),
+        id: editingId || `note-${Date.now()}`,
+        title: title.trim(),
+        content,
         tags,
-        isFavorite,
-        folderId: selectedFolderId,
-        createdAt: isEditing ? 
-          notes.find(n => n.id === id)?.createdAt || new Date() : 
-          new Date(),
-        updatedAt: new Date()
+        isFavorite: false,
+        folderId: undefined,
+        createdAt: editingId ? 
+          (existingNotes.find((n: any) => n.id === editingId)?.createdAt || new Date().toISOString()) : 
+          new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        isArchived: false
       };
 
-      if (isEditing) {
-        const noteIndex = notes.findIndex(n => n.id === id);
-        if (noteIndex !== -1) {
-          notes[noteIndex] = noteData;
-        }
+      let updatedNotes;
+      if (editingId) {
+        updatedNotes = existingNotes.map((note: any) =>
+          note.id === editingId ? noteData : note
+        );
+        showNotification.success('Заметка обновлена');
       } else {
-        notes.unshift(noteData);
+        updatedNotes = [noteData, ...existingNotes];
+        showNotification.success('Заметка создана');
       }
 
-      localStorage.setItem('notesflow-notes', JSON.stringify(notes));
+      localStorage.setItem('notesflow-notes', JSON.stringify(updatedNotes));
+      setHasUnsavedChanges(false);
       
-      if (redirect) {
-        setHasUnsavedChanges(false);
+      // Небольшая задержка перед переходом для показа уведомления
+      setTimeout(() => {
         navigate('/');
-      }
+      }, 500);
+      
     } catch (error) {
       console.error('Error saving note:', error);
-      alert('Ошибка при сохранении заметки');
+      showNotification.error('Ошибка при сохранении заметки');
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Обработка выхода / Handle exit
-  const handleExit = () => {
+  // Выход без сохранения
+  const handleCancel = () => {
     if (hasUnsavedChanges) {
-      setShowExitConfirm(true);
+      if (window.confirm('У вас есть несохраненные изменения. Вы уверены, что хотите выйти?')) {
+        navigate('/');
+      }
     } else {
       navigate('/');
     }
   };
 
-  // Получить цвет тега / Get tag color
-  const getTagColor = (tagName: string): string => {
-    const savedColors = JSON.parse(localStorage.getItem('notesflow-tag-colors') || '{}');
-    const colors = ['#2D9EE0', '#3854F2', '#576EF2', '#2193B0', '#6DD5ED', '#15B9A7', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
-    return savedColors[tagName] || colors[tagName.length % colors.length];
-  };
-
-  // Обработчики для медиа / Media handlers
-  const handleImageUpload = (imageData: { url: string; alt?: string }) => {
-    if (editor) {
-      editor.chain().focus().setImage({ 
-        src: imageData.url, 
-        alt: imageData.alt || '' 
-      }).run();
-    }
-    setShowImageUploader(false);
-  };
-
-  const handleTableInsert = (tableHTML: string) => {
-    if (editor) {
-      editor.chain().focus().insertContent(tableHTML).run();
-    }
-    setShowTableInserter(false);
-  };
-
-  // Горячие клавиши / Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Ctrl+S или Cmd+S для сохранения / Ctrl+S or Cmd+S to save
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+  // Горячие клавиши
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      if (e.key === 's') {
         e.preventDefault();
-        saveNote(false);
+        handleSave();
       }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      if (autoSaveTimerRef.current) {
-        clearTimeout(autoSaveTimerRef.current);
-      }
-    };
-  }, []);
+    }
+    if (e.key === 'Escape') {
+      handleCancel();
+    }
+  };
 
   if (isLoading) {
     return (
@@ -282,140 +175,109 @@ export const CreateArticlePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background dark:bg-dark-background">
+    <div className="min-h-screen bg-background dark:bg-dark-background" onKeyDown={handleKeyDown}>
       <div className="max-w-4xl mx-auto p-4 space-y-6">
-        {/* Заголовок страницы / Page header */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-6">
+        {/* Шапка с действиями */}
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Button
                 variant="ghost"
-                onClick={handleExit}
+                onClick={handleCancel}
                 className="p-2"
-                title="Назад к списку заметок"
+                title="Назад к заметкам"
               >
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
               </Button>
-              <h1 className="text-2xl font-bold text-text-primary dark:text-dark-text-primary">
-                {isEditing ? 'Редактировать заметку' : 'Новая заметка'}
+              <h1 className="text-xl font-semibold text-text-primary dark:text-dark-text-primary">
+                {editingId ? 'Редактирование заметки' : 'Новая заметка'}
               </h1>
-            </div>
-
-            <div className="flex items-center gap-3">
-              {/* Статус сохранения / Save status */}
-              {lastSaved && (
-                <span className="text-sm text-success">
-                  Сохранено в {lastSaved.toLocaleTimeString()}
-                </span>
-              )}
-              
               {hasUnsavedChanges && (
                 <span className="text-sm text-warning flex items-center gap-1">
                   <div className="w-2 h-2 bg-warning rounded-full animate-pulse" />
-                  Есть несохраненные изменения
+                  Несохраненные изменения
                 </span>
               )}
+            </div>
 
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={handleCancel}
+                disabled={isSaving}
+              >
+                Отмена
+              </Button>
               <Button
                 variant="primary"
-                onClick={() => saveNote()}
-                disabled={isSaving || (!title.trim() && !content.trim())}
-                className="min-w-[100px]"
+                onClick={handleSave}
+                disabled={isSaving || !title.trim()}
+                className="flex items-center gap-2"
               >
                 {isSaving ? (
-                  <div className="flex items-center gap-2">
+                  <>
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     Сохранение...
-                  </div>
+                  </>
                 ) : (
-                  'Сохранить'
+                  <>
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    Сохранить
+                  </>
                 )}
               </Button>
             </div>
           </div>
+        </Card>
 
-          {/* Заголовок заметки / Note title */}
-          <input
-            ref={titleInputRef}
-            type="text"
-            value={title}
-            onChange={handleTitleChange}
-            placeholder="Заголовок заметки..."
-            className="w-full text-3xl font-bold bg-transparent border-none outline-none text-text-primary dark:text-dark-text-primary placeholder-text-muted dark:placeholder-dark-text-muted mb-4"
-          />
-
-          {/* Метаданные / Metadata */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            {/* Папка / Folder */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-text-primary dark:text-dark-text-primary">
-                Папка:
-              </label>
-              <select
-                value={selectedFolderId || ''}
-                onChange={(e) => {
-                  setSelectedFolderId(e.target.value || undefined);
-                  setHasUnsavedChanges(true);
-                }}
-                className="input w-full"
-              >
-                <option value="">Без папки</option>
-                {getFolders().map((folder: any) => (
-                  <option key={folder.id} value={folder.id}>
-                    {folder.name}
-                  </option>
-                ))}
-              </select>
+        {/* Форма создания/редактирования */}
+        <div className="space-y-6">
+          {/* Заголовок */}
+          <Card className="p-6">
+            <label className="block text-sm font-medium text-text-primary dark:text-dark-text-primary mb-2">
+              Название заметки *
+            </label>
+            <input
+              ref={titleInputRef}
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Введите название заметки..."
+              className="input w-full text-lg"
+              maxLength={200}
+            />
+            <div className="flex justify-between items-center mt-2">
+              <span className="text-xs text-text-secondary dark:text-dark-text-secondary">
+                Обязательное поле
+              </span>
+              <span className="text-xs text-text-secondary dark:text-dark-text-secondary">
+                {title.length}/200
+              </span>
             </div>
+          </Card>
 
-            {/* Избранное / Favorite */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-text-primary dark:text-dark-text-primary">
-                Статус:
-              </label>
-              <div className="flex items-center gap-3">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={isFavorite}
-                    onChange={(e) => {
-                      setIsFavorite(e.target.checked);
-                      setHasUnsavedChanges(true);
-                    }}
-                    className="rounded border-border focus:ring-primary"
-                  />
-                  <span className="text-sm flex items-center gap-1">
-                    <svg className="h-4 w-4 text-warning" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                    </svg>
-                    Добавить в избранное
-                  </span>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          {/* Теги / Tags */}
-          <div className="space-y-3">
-            <label className="block text-sm font-medium text-text-primary dark:text-dark-text-primary">
-              Теги:
+          {/* Теги */}
+          <Card className="p-6">
+            <label className="block text-sm font-medium text-text-primary dark:text-dark-text-primary mb-2">
+              Теги
             </label>
             
-            {/* Отображение тегов / Display tags */}
+            {/* Существующие теги */}
             {tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-3">
                 {tags.map((tag) => (
                   <span
                     key={tag}
-                    className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium rounded-full text-white"
-                    style={{ backgroundColor: getTagColor(tag) }}
+                    className="inline-flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary dark:bg-night-primary/10 dark:text-night-primary rounded-full text-sm"
                   >
                     #{tag}
                     <button
-                      onClick={() => removeTag(tag)}
-                      className="hover:bg-white/20 rounded-full p-0.5 transition-colors"
+                      onClick={() => handleRemoveTag(tag)}
+                      className="ml-1 text-primary/70 hover:text-primary dark:text-night-primary/70 dark:hover:text-night-primary"
                     >
                       <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -425,115 +287,49 @@ export const CreateArticlePage: React.FC = () => {
                 ))}
               </div>
             )}
-            
-            {/* Ввод тегов / Tag input */}
+
+            {/* Ввод новых тегов */}
             <input
               type="text"
               value={tagInput}
               onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={handleTagInput}
-              placeholder="Добавить теги (Enter, пробел или запятая для разделения)"
+              onKeyDown={handleAddTag}
+              placeholder="Добавьте теги (нажмите Enter или запятую)..."
               className="input w-full"
             />
+            <p className="text-xs text-text-secondary dark:text-dark-text-secondary mt-2">
+              Теги помогают организовать и быстро находить заметки
+            </p>
+          </Card>
+
+          {/* Редактор контента */}
+          <Card className="p-6">
+            <label className="block text-sm font-medium text-text-primary dark:text-dark-text-primary mb-4">
+              Содержание
+            </label>
+            <RichTextEditor
+              content={content}
+              onChange={setContent}
+              placeholder="Начните писать вашу заметку..."
+            />
+          </Card>
+        </div>
+
+        {/* Подсказки по горячим клавишам */}
+        <Card className="p-4 bg-neutral-50 dark:bg-dark-surface">
+          <div className="flex items-center gap-4 text-sm text-text-secondary dark:text-dark-text-secondary">
+            <span className="flex items-center gap-1">
+              <kbd className="px-2 py-1 bg-white dark:bg-dark-background rounded border text-xs">Ctrl</kbd>
+              <span>+</span>
+              <kbd className="px-2 py-1 bg-white dark:bg-dark-background rounded border text-xs">S</kbd>
+              <span>— сохранить</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="px-2 py-1 bg-white dark:bg-dark-background rounded border text-xs">Esc</kbd>
+              <span>— отмена</span>
+            </span>
           </div>
         </Card>
-
-        {/* Панель форматирования / Formatting toolbar */}
-        <FormattingToolbar editor={editor} />
-
-        {/* Дополнительные инструменты / Additional tools */}
-        <Card className="p-4">
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setShowImageUploader(true)}
-              className="flex items-center gap-2"
-            >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              Изображение
-            </Button>
-
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setShowTableInserter(true)}
-              className="flex items-center gap-2"
-            >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-              Таблица
-            </Button>
-          </div>
-        </Card>
-
-        {/* Редактор / Editor */}
-        <RichTextEditor
-          content={content}
-          onChange={setContent}
-          onSave={() => saveNote(false)}
-          autoFocus={isEditing}
-        />
-
-        {/* Модальные окна / Modal windows */}
-        {showImageUploader && (
-          <ImageUploader
-            onImageUpload={handleImageUpload}
-            onClose={() => setShowImageUploader(false)}
-          />
-        )}
-
-        {showTableInserter && (
-          <TableInserter
-            onTableInsert={handleTableInsert}
-            onClose={() => setShowTableInserter(false)}
-          />
-        )}
-
-        {/* Диалог подтверждения выхода / Exit confirmation dialog */}
-        {showExitConfirm && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <Card className="max-w-md w-full animate-scale-in">
-              <div className="p-6 space-y-4">
-                <h3 className="text-lg font-semibold text-text-primary dark:text-dark-text-primary">
-                  Несохраненные изменения
-                </h3>
-                <p className="text-text-secondary dark:text-dark-text-secondary">
-                  У вас есть несохраненные изменения. Что вы хотите сделать?
-                </p>
-                <div className="flex gap-3">
-                  <Button
-                    variant="secondary"
-                    onClick={() => setShowExitConfirm(false)}
-                    className="flex-1"
-                  >
-                    Отмена
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setHasUnsavedChanges(false);
-                      navigate('/');
-                    }}
-                    className="flex-1"
-                  >
-                    Выйти без сохранения
-                  </Button>
-                  <Button
-                    variant="primary"
-                    onClick={() => saveNote()}
-                    className="flex-1"
-                  >
-                    Сохранить и выйти
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          </div>
-        )}
       </div>
     </div>
   );
