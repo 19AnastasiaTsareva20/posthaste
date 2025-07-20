@@ -12,3 +12,4 @@ export { TableInserter } from './TableInserter';
 // Системные компоненты / System components
 export { NotificationSystem, showNotification } from './NotificationSystem';
 export { Navigation } from './Navigation';
+export { ExportManager } from './ExportManager';
