@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from './Button';
-import { showNotification } from './NotificationSystem';
+import { showNotification } from './__tests__/NotificationSystem';
 
 interface Note {
   id: string;

@@ -10,6 +10,6 @@ export { ImageUploader } from './ImageUploader';
 export { TableInserter } from './TableInserter';
 
 // Системные компоненты / System components
-export { NotificationSystem, showNotification } from './NotificationSystem';
+export { NotificationSystem, showNotification } from './__tests__/NotificationSystem';
 export { Navigation } from './Navigation';
 export { ExportManager } from './ExportManager';
