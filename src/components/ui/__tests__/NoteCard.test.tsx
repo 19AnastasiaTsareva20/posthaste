@@ -1,126 +1,114 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import '@testing-library/jest-dom';
 import { NoteCard } from '../NoteCard';
-import { Note } from '../../../types';
 
-const mockNote: Note = {
-  id: '1',
-  title: 'Тестовая заметка',
-  content: 'Это содержимое тестовой заметки для проверки компонента.',
-  tags: ['тест', 'react'],
-  folderId: undefined,
+const mockNote = {
+  id: 'test-1',
+  title: 'Test Note',
+  content: '<p>This is a test note content</p>',
+  tags: ['test', 'unit'],
   isFavorite: false,
-  isArchived: false,
-  createdAt: new Date('2024-01-01'),
-  updatedAt: new Date('2024-01-02')
+  createdAt: new Date('2024-01-01T00:00:00.000Z'),
+  updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+  isArchived: false
 };
 
-const mockProps = {
+const defaultProps = {
   note: mockNote,
-  onEdit: jest.fn(),
-  onDelete: jest.fn(),
-  onToggleFavorite: jest.fn(),
+  onClick: jest.fn(),
+  onFavoriteToggle: jest.fn(),
   onArchive: jest.fn(),
-  onClick: jest.fn()
+  onDelete: jest.fn(),
+  viewMode: 'grid' as const,
+  isArchived: false
 };
 
-describe('NoteCard component', () => {
+describe('NoteCard', () => {
   beforeEach(() => {
-    // Clear all mocks before each test/Очищаем все моки перед каждым тестом
     jest.clearAllMocks();
   });
 
-  test('renders note title and content', () => {
-    render(<NoteCard {...mockProps} />);
+  it('renders note information correctly', () => {
+    render(<NoteCard {...defaultProps} />);
     
-    expect(screen.getByText('Тестовая заметка')).toBeInTheDocument();
-    expect(screen.getByText(/Это содержимое тестовой заметки/)).toBeInTheDocument();
+    expect(screen.getByText('Test Note')).toBeInTheDocument();
+    expect(screen.getByText('This is a test note content')).toBeInTheDocument();
+    expect(screen.getByText('#test')).toBeInTheDocument();
+    expect(screen.getByText('#unit')).toBeInTheDocument();
   });
 
-  test('renders tags correctly', () => {
-    render(<NoteCard {...mockProps} />);
+  it('calls onClick when card is clicked', () => {
+    render(<NoteCard {...defaultProps} />);
     
-    expect(screen.getByText('#тест')).toBeInTheDocument();
-    expect(screen.getByText('#react')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Test Note'));
+    
+    expect(defaultProps.onClick).toHaveBeenCalledWith();
   });
 
-  test('calls onEdit when edit button is clicked', () => {
-    render(<NoteCard {...mockProps} />);
+  it('calls onFavoriteToggle when favorite button is clicked', () => {
+    render(<NoteCard {...defaultProps} />);
     
-    const editButton = screen.getByText('Изменить');
-    fireEvent.click(editButton);
-    
-    expect(mockProps.onEdit).toHaveBeenCalledWith(mockNote);
-  });
-
-  test('calls onToggleFavorite when favorite button is clicked', () => {
-    render(<NoteCard {...mockProps} />);
-    
-    // Use aria-label to find favorite button/Используем aria-label для поиска кнопки избранного
-    const favoriteButton = screen.getByLabelText('Добавить в избранное');
+    const favoriteButton = screen.getByTitle(/добавить в избранное/i);
     fireEvent.click(favoriteButton);
     
-    expect(mockProps.onToggleFavorite).toHaveBeenCalledWith('1');
+    expect(defaultProps.onFavoriteToggle).toHaveBeenCalledWith();
   });
 
-  test('shows confirmation and calls onDelete when delete button is clicked', () => {
-    // Mock window.confirm/Мокаем window.confirm
-    window.confirm = jest.fn(() => true);
+  it('shows favorite star when note is favorite', () => {
+    const favoriteNote = { ...mockNote, isFavorite: true };
+    render(<NoteCard {...defaultProps} note={favoriteNote} />);
     
-    render(<NoteCard {...mockProps} />);
-    
-    const deleteButton = screen.getByText('Удалить');
-    fireEvent.click(deleteButton);
-    
-    expect(window.confirm).toHaveBeenCalledWith('Удалить заметку?');
-    expect(mockProps.onDelete).toHaveBeenCalledWith('1');
+    expect(screen.getByTitle(/удалить из избранного/i)).toBeInTheDocument();
   });
 
-  test('shows confirmation and calls onArchive when archive button is clicked', () => {
-    window.confirm = jest.fn(() => true);
+  it('calls onArchive when archive button is clicked', () => {
+    render(<NoteCard {...defaultProps} />);
     
-    render(<NoteCard {...mockProps} />);
-    
-    const archiveButton = screen.getByText('📁');
+    const archiveButton = screen.getByTitle(/архивировать/i);
     fireEvent.click(archiveButton);
     
-    expect(window.confirm).toHaveBeenCalledWith('Архивировать заметку?');
-    expect(mockProps.onArchive).toHaveBeenCalledWith('1');
+    expect(defaultProps.onArchive).toHaveBeenCalledWith();
   });
 
-  test('displays "Без названия" when title is empty', () => {
-    const noteWithoutTitle = { ...mockNote, title: '' };
-    render(<NoteCard {...mockProps} note={noteWithoutTitle} />);
+  it('calls onDelete when delete button is clicked', () => {
+    render(<NoteCard {...defaultProps} />);
     
-    expect(screen.getByText('Без названия')).toBeInTheDocument();
+    const deleteButton = screen.getByTitle(/удалить/i);
+    fireEvent.click(deleteButton);
+    
+    expect(defaultProps.onDelete).toHaveBeenCalledWith();
   });
 
-  test('shows favorite star when note is favorite', () => {
-    const favoriteNote = { ...mockNote, isFavorite: true };
-    render(<NoteCard {...mockProps} note={favoriteNote} />);
+  it('renders in list view mode correctly', () => {
+    render(<NoteCard {...defaultProps} viewMode="list" />);
     
-    // Find favorite button by aria-label and check color/Находим кнопку по aria-label и проверяем цвет
-    const favoriteButton = screen.getByLabelText('Удалить из избранного');
-    expect(favoriteButton).toHaveClass('text-yellow-500');
+    expect(screen.getByText('Test Note')).toBeInTheDocument();
+    // В list режиме должна быть другая структура
   });
 
-  test('calls onClick when card is clicked', () => {
-    render(<NoteCard {...mockProps} />);
+  it('handles empty tags array', () => {
+    const noteWithoutTags = { ...mockNote, tags: [] };
+    render(<NoteCard {...defaultProps} note={noteWithoutTags} />);
     
-    // Click on the card content area/Кликаем по области содержимого карточки
-    const cardContent = screen.getByText('Тестовая заметка').closest('div');
-    fireEvent.click(cardContent as Element);
-    
-    expect(mockProps.onClick).toHaveBeenCalledWith(mockNote);
+    expect(screen.getByText('Test Note')).toBeInTheDocument();
+    expect(screen.queryByText('#test')).not.toBeInTheDocument();
   });
 
-  test('does not show archive button when onArchive is not provided', () => {
-    const propsWithoutArchive = { ...mockProps };
-    delete propsWithoutArchive.onArchive;
+  it('truncates long content', () => {
+    const longContent = '<p>' + 'A'.repeat(300) + '</p>';
+    const noteWithLongContent = { ...mockNote, content: longContent };
     
-    render(<NoteCard {...propsWithoutArchive} />);
+    render(<NoteCard {...defaultProps} note={noteWithLongContent} />);
     
-    expect(screen.queryByText('📁')).not.toBeInTheDocument();
+    const contentElement = screen.getByText(/A+/);
+    expect(contentElement.textContent!.length).toBeLessThan(300);
+  });
+
+  it('shows archived status when note is archived', () => {
+    const archivedNote = { ...mockNote, isArchived: true };
+    render(<NoteCard {...defaultProps} note={archivedNote} isArchived={true} />);
+    
+    // Проверяем наличие элементов, указывающих на архивированный статус
+    expect(screen.getByTitle(/восстановить/i)).toBeInTheDocument();
   });
 });

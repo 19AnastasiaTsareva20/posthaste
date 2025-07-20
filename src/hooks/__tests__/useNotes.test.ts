@@ -1,238 +1,149 @@
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { useNotes } from '../useNotes';
+import * as noteStorage from '../../utils/noteStorage';
 
-// Mock localStorage/Мокаем localStorage
-const localStorageMock = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
-};
-global.localStorage = localStorageMock as any;
+// Mock the noteStorage module
+jest.mock('../../utils/noteStorage');
+const mockedNoteStorage = noteStorage as jest.Mocked<typeof noteStorage>;
 
-describe('useNotes hook', () => {
+describe('useNotes', () => {
+  const mockNote = {
+    id: 'test-1',
+    title: 'Test Note',
+    content: '<p>Test content</p>',
+    tags: ['test'],
+    isFavorite: false,
+    createdAt: '2024-01-01T00:00:00.000Z',
+    updatedAt: '2024-01-01T00:00:00.000Z',
+    isArchived: false
+  };
+
   beforeEach(() => {
-    // Clear localStorage mock before each test/Очищаем мок перед каждым тестом
-    localStorageMock.getItem.mockClear();
-    localStorageMock.setItem.mockClear();
-    localStorageMock.getItem.mockReturnValue('[]');
+    jest.clearAllMocks();
+    mockedNoteStorage.loadNotes.mockReturnValue([]);
   });
 
-  test('should add new note', () => {
+  it('loads notes on initialization', () => {
+    mockedNoteStorage.loadNotes.mockReturnValue([mockNote]);
+    
     const { result } = renderHook(() => useNotes());
-
-    act(() => {
-      const noteId = result.current.addNote({
-        title: 'Тестовая заметка',
-        content: 'Содержимое тестовой заметки',
-        tags: ['тест'],
-        folderId: undefined,
-        isFavorite: false,
-        isArchived: false
-      });
-      expect(noteId).toBeDefined();
-    });
-
-    expect(result.current.allNotes).toHaveLength(1);
-    expect(result.current.allNotes[0].title).toBe('Тестовая заметка');
+    
+    expect(result.current.notes).toEqual([mockNote]);
+    expect(mockedNoteStorage.loadNotes).toHaveBeenCalledWith(false);
   });
 
-  test('should add multiple notes with unique IDs', () => {
+  it('creates a new note', () => {
     const { result } = renderHook(() => useNotes());
-
-    let noteId1: string;
-    let noteId2: string;
-
+    
     act(() => {
-      noteId1 = result.current.addNote({
-        title: 'Первая заметка',
-        content: 'Содержимое первой заметки',
-        tags: [],
-        folderId: undefined,
+      result.current.createNote('New Note', '<p>Content</p>', ['tag1']);
+    });
+    
+    expect(mockedNoteStorage.saveNote).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'New Note',
+        content: '<p>Content</p>',
+        tags: ['tag1'],
         isFavorite: false,
         isArchived: false
-      });
-    });
-
-    act(() => {
-      noteId2 = result.current.addNote({
-        title: 'Вторая заметка',
-        content: 'Содержимое второй заметки',
-        tags: [],
-        folderId: undefined,
-        isFavorite: false,
-        isArchived: false
-      });
-    });
-
-    // Verify both notes were added with unique IDs/Проверяем что обе заметки добавлены с уникальными ID
-    expect(result.current.allNotes).toHaveLength(2);
-    expect(noteId1).not.toBe(noteId2);
-    expect(result.current.allNotes.find(note => note.id === noteId1)).toBeDefined();
-    expect(result.current.allNotes.find(note => note.id === noteId2)).toBeDefined();
+      })
+    );
   });
 
-  test('should filter notes by search query', async () => {
+  it('updates an existing note', () => {
+    mockedNoteStorage.loadNotes.mockReturnValue([mockNote]);
     const { result } = renderHook(() => useNotes());
-
-    // Add test notes with delay to ensure unique IDs/Добавляем тестовые заметки с задержкой для уникальных ID
-    await act(async () => {
-      result.current.addNote({
-        title: 'React заметка',
-        content: 'О React разработке',
-        tags: [],
-        folderId: undefined,
-        isFavorite: false,
-        isArchived: false
-      });
-      
-      // Small delay to ensure different timestamps/Небольшая задержка для разных timestamp
-      await new Promise(resolve => setTimeout(resolve, 1));
-      
-      result.current.addNote({
-        title: 'Vue заметка',
-        content: 'О Vue разработке',
-        tags: [],
-        folderId: undefined,
-        isFavorite: false,
-        isArchived: false
-      });
+    
+    act(() => {
+      result.current.updateNote(mockNote.id, 'Updated Title', '<p>Updated content</p>', ['updated']);
     });
-
-    // Verify notes were added/Проверяем что заметки добавлены
-    expect(result.current.allNotes).toHaveLength(2);
-    expect(result.current.notes).toHaveLength(2);
-
-    // Test search with proper async handling/Тестируем поиск с корректной обработкой асинхронности
-    await act(async () => {
-      result.current.setSearchQuery('React');
-    });
-
-    expect(result.current.notes).toHaveLength(1);
-    expect(result.current.notes[0].title).toBe('React заметка');
+    
+    expect(mockedNoteStorage.saveNote).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: mockNote.id,
+        title: 'Updated Title',
+        content: '<p>Updated content</p>',
+        tags: ['updated'],
+        updatedAt: expect.any(String)
+      })
+    );
   });
 
-  test('should toggle favorite status', () => {
+  it('deletes a note', () => {
     const { result } = renderHook(() => useNotes());
-
-    let noteId: string;
+    
     act(() => {
-      noteId = result.current.addNote({
-        title: 'Заметка для избранного',
-        content: 'Содержимое',
-        tags: [],
-        folderId: undefined,
-        isFavorite: false,
-        isArchived: false
-      });
+      result.current.deleteNote(mockNote.id);
     });
-
-    act(() => {
-      result.current.toggleFavorite(noteId);
-    });
-
-    expect(result.current.allNotes[0].isFavorite).toBe(true);
-
-    act(() => {
-      result.current.toggleFavorite(noteId);
-    });
-
-    expect(result.current.allNotes[0].isFavorite).toBe(false);
+    
+    expect(mockedNoteStorage.deleteNote).toHaveBeenCalledWith(mockNote.id);
   });
 
-  test('should archive and restore note', () => {
+  it('archives a note', () => {
     const { result } = renderHook(() => useNotes());
-
-    let noteId: string;
+    
     act(() => {
-      noteId = result.current.addNote({
-        title: 'Заметка для архива',
-        content: 'Содержимое',
-        tags: [],
-        folderId: undefined,
-        isFavorite: false,
-        isArchived: false
-      });
+      result.current.archiveNote(mockNote.id);
     });
-
-    // Archive note/Архивируем заметку
-    act(() => {
-      result.current.archiveNote(noteId);
-    });
-
-    expect(result.current.allNotes[0].isArchived).toBe(true);
-    expect(result.current.notes).toHaveLength(0); // Не показывается в основном списке
-
-    // Restore note/Восстанавливаем заметку
-    act(() => {
-      result.current.restoreNote(noteId);
-    });
-
-    expect(result.current.allNotes[0].isArchived).toBe(false);
-    expect(result.current.notes).toHaveLength(1); // Снова показывается
+    
+    expect(mockedNoteStorage.archiveNote).toHaveBeenCalledWith(mockNote.id);
   });
 
-  test('should filter notes by folder', () => {
+  it('restores a note from archive', () => {
     const { result } = renderHook(() => useNotes());
-
+    
     act(() => {
-      result.current.addNote({
-        title: 'Заметка в папке работа',
-        content: 'Содержимое',
-        tags: [],
-        folderId: 'work',
-        isFavorite: false,
-        isArchived: false
-      });
-      
-      result.current.addNote({
-        title: 'Заметка в папке личное',
-        content: 'Содержимое',
-        tags: [],
-        folderId: 'personal',
-        isFavorite: false,
-        isArchived: false
-      });
+      result.current.restoreNote(mockNote.id);
     });
-
-    // Filter by work folder/Фильтруем по папке работа
-    act(() => {
-      result.current.setSelectedFolder('work');
-    });
-
-    expect(result.current.notes).toHaveLength(1);
-    expect(result.current.notes[0].folderId).toBe('work');
+    
+    expect(mockedNoteStorage.restoreNote).toHaveBeenCalledWith(mockNote.id);
   });
 
-  test('should filter notes by tag', () => {
+  it('toggles favorite status', () => {
     const { result } = renderHook(() => useNotes());
-
+    
     act(() => {
-      result.current.addNote({
-        title: 'Заметка с тегом важное',
-        content: 'Содержимое',
-        tags: ['важное', 'срочно'],
-        folderId: undefined,
-        isFavorite: false,
-        isArchived: false
-      });
-      
-      result.current.addNote({
-        title: 'Заметка с тегом идеи',
-        content: 'Содержимое',
-        tags: ['идеи'],
-        folderId: undefined,
-        isFavorite: false,
-        isArchived: false
-      });
+      result.current.toggleFavorite(mockNote.id);
     });
+    
+    expect(mockedNoteStorage.toggleFavorite).toHaveBeenCalledWith(mockNote.id);
+  });
 
-    // Filter by важное tag/Фильтруем по тегу важное
+  it('reloads notes', () => {
+    const { result } = renderHook(() => useNotes());
+    mockedNoteStorage.loadNotes.mockClear();
+    
     act(() => {
-      result.current.setSelectedTag('важное');
+      result.current.reloadNotes();
     });
+    
+    expect(mockedNoteStorage.loadNotes).toHaveBeenCalledWith(false);
+  });
 
-    expect(result.current.notes).toHaveLength(1);
-    expect(result.current.notes[0].tags).toContain('важное');
+  it('loads archived notes', () => {
+    const archivedNote = { ...mockNote, isArchived: true };
+    mockedNoteStorage.loadNotes.mockReturnValue([archivedNote]);
+    
+    const { result } = renderHook(() => useNotes());
+    
+    act(() => {
+      result.current.loadArchivedNotes();
+    });
+    
+    expect(mockedNoteStorage.loadNotes).toHaveBeenCalledWith(true);
+  });
+
+  it('handles storage errors gracefully', () => {
+    mockedNoteStorage.saveNote.mockImplementation(() => {
+      throw new Error('Storage error');
+    });
+    
+    const { result } = renderHook(() => useNotes());
+    
+    expect(() => {
+      act(() => {
+        result.current.createNote('Test', 'Content', []);
+      });
+    }).not.toThrow();
   });
 });
