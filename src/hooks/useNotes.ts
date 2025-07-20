@@ -1,210 +1,172 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Note, CreateNoteData } from '../types';
-
-// Counter for unique ID generation/Счетчик для генерации уникальных ID
-let noteIdCounter = 0;
-
-// Generate unique ID/Генерация уникального ID
-const generateUniqueId = (): string => {
-  const timestamp = Date.now();
-  const counter = ++noteIdCounter;
-  return `${timestamp}-${counter}`;
-};
+import { useState, useEffect, useCallback } from 'react';
+import { Note, saveNote, loadNotes, deleteNote, archiveNote, restoreNote, toggleFavorite } from '../utils/noteStorage';
 
 export const useNotes = () => {
-  const [allNotes, setAllNotes] = useState<Note[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFolder, setSelectedFolder] = useState<string | undefined>();
-  const [selectedTag, setSelectedTag] = useState<string | undefined>();
-  const [showFavorites, setShowFavorites] = useState(false);
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Load notes from localStorage on mount/Загрузка заметок из localStorage при монтировании
-  useEffect(() => {
-    const savedNotes = localStorage.getItem('notes');
-    if (savedNotes) {
-      try {
-        const parsedNotes = JSON.parse(savedNotes).map((note: any) => ({
-          ...note,
-          createdAt: new Date(note.createdAt),
-          updatedAt: new Date(note.updatedAt)
-        }));
-        setAllNotes(parsedNotes);
-      } catch (error) {
-        console.error('Error parsing notes from localStorage:', error);
-      }
+  // Load notes from storage
+  const reloadNotes = useCallback(() => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const loadedNotes = loadNotes(false);
+      setNotes(loadedNotes);
+    } catch (err) {
+      setError('Failed to load notes');
+      console.error('Error loading notes:', err);
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
-  // Save notes to localStorage whenever allNotes changes/Сохранение заметок в localStorage при изменении allNotes
-  useEffect(() => {
-    localStorage.setItem('notes', JSON.stringify(allNotes));
-  }, [allNotes]);
+  // Load archived notes
+  const loadArchivedNotes = useCallback(() => {
+    try {
+      setError(null);
+      const archivedNotes = loadNotes(true).filter(note => note.isArchived);
+      return archivedNotes;
+    } catch (err) {
+      setError('Failed to load archived notes');
+      console.error('Error loading archived notes:', err);
+      return [];
+    }
+  }, []);
 
-  // Filtered notes based on search and filters/Отфильтрованные заметки на основе поиска и фильтров
-  const notes = useMemo(() => {
-    return allNotes.filter(note => {
-      // Skip archived notes/Пропускаем архивированные заметки
-      if (note.isArchived) return false;
+  // Create new note
+  const createNote = useCallback((title: string, content: string, tags: string[]) => {
+    try {
+      const newNote: Note = {
+        id: `note-${Date.now()}`,
+        title,
+        content,
+        tags,
+        isFavorite: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        isArchived: false
+      };
+
+      saveNote(newNote);
+      reloadNotes();
+      return newNote.id;
+    } catch (err) {
+      setError('Failed to create note');
+      console.error('Error creating note:', err);
+      return null;
+    }
+  }, [reloadNotes]);
+
+  // Update existing note
+  const updateNote = useCallback((id: string, title: string, content: string, tags: string[]) => {
+    try {
+      const existingNotes = loadNotes(true);
+      const existingNote = existingNotes.find(note => note.id === id);
       
-      // Search filter/Фильтр поиска
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        const matchesTitle = note.title.toLowerCase().includes(query);
-        const matchesContent = note.content.toLowerCase().includes(query);
-        const matchesTags = note.tags.some(tag => 
-          tag.toLowerCase().includes(query)
-        );
-        if (!matchesTitle && !matchesContent && !matchesTags) {
-          return false;
-        }
+      if (!existingNote) {
+        throw new Error('Note not found');
       }
-      
-      // Folder filter/Фильтр папок
-      if (selectedFolder && note.folderId !== selectedFolder) {
-        return false;
-      }
-      
-      // Tag filter/Фильтр тегов
-      if (selectedTag && !note.tags.includes(selectedTag)) {
-        return false;
-      }
-      
-      // Favorites filter/Фильтр избранного
-      if (showFavorites && !note.isFavorite) {
-        return false;
-      }
-      
+
+      const updatedNote: Note = {
+        ...existingNote,
+        title,
+        content,
+        tags,
+        updatedAt: new Date().toISOString()
+      };
+
+      saveNote(updatedNote);
+      reloadNotes();
       return true;
-    }).sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
-  }, [allNotes, searchQuery, selectedFolder, selectedTag, showFavorites]);
+    } catch (err) {
+      setError('Failed to update note');
+      console.error('Error updating note:', err);
+      return false;
+    }
+  }, [reloadNotes]);
 
-  // Add new note/Добавление новой заметки
-  const addNote = (noteData: CreateNoteData): string => {
-    const now = new Date();
-    const newNote: Note = {
-      id: generateUniqueId(),
-      title: noteData.title,
-      content: noteData.content,
-      tags: noteData.tags,
-      folderId: noteData.folderId,
-      isFavorite: noteData.isFavorite,
-      isArchived: noteData.isArchived,
-      createdAt: now,
-      updatedAt: now
-    };
-    
-    setAllNotes(prev => [newNote, ...prev]);
-    return newNote.id;
-  };
+  // Delete note (archive)
+  const deleteNoteHandler = useCallback((id: string) => {
+    try {
+      deleteNote(id);
+      reloadNotes();
+      return true;
+    } catch (err) {
+      setError('Failed to delete note');
+      console.error('Error deleting note:', err);
+      return false;
+    }
+  }, [reloadNotes]);
 
-  // Update existing note/Обновление существующей заметки
-  const updateNote = (id: string, updates: Partial<Note>): void => {
-    setAllNotes(prev => prev.map(note => 
-      note.id === id 
-        ? { ...note, ...updates, updatedAt: new Date() }
-        : note
-    ));
-  };
+  // Archive note
+  const archiveNoteHandler = useCallback((id: string) => {
+    try {
+      archiveNote(id);
+      reloadNotes();
+      return true;
+    } catch (err) {
+      setError('Failed to archive note');
+      console.error('Error archiving note:', err);
+      return false;
+    }
+  }, [reloadNotes]);
 
-  // Delete note/Удаление заметки
-  const deleteNote = (id: string): void => {
-    setAllNotes(prev => prev.filter(note => note.id !== id));
-  };
+  // Restore note from archive
+  const restoreNoteHandler = useCallback((id: string) => {
+    try {
+      restoreNote(id);
+      reloadNotes();
+      return true;
+    } catch (err) {
+      setError('Failed to restore note');
+      console.error('Error restoring note:', err);
+      return false;
+    }
+  }, [reloadNotes]);
 
-  // Toggle favorite status/Переключение статуса избранного
-  const toggleFavorite = (id: string): void => {
-    updateNote(id, { 
-      isFavorite: !allNotes.find(note => note.id === id)?.isFavorite 
-    });
-  };
+  // Toggle favorite status
+  const toggleFavoriteHandler = useCallback((id: string) => {
+    try {
+      toggleFavorite(id);
+      reloadNotes();
+      return true;
+    } catch (err) {
+      setError('Failed to toggle favorite');
+      console.error('Error toggling favorite:', err);
+      return false;
+    }
+  }, [reloadNotes]);
 
-  // Archive note/Архивирование заметки
-  const archiveNote = (id: string): void => {
-    updateNote(id, { isArchived: true });
-  };
+  // Get note by ID
+  const getNoteById = useCallback((id: string): Note | null => {
+    try {
+      const allNotes = loadNotes(true);
+      return allNotes.find(note => note.id === id) || null;
+    } catch (err) {
+      setError('Failed to get note');
+      console.error('Error getting note:', err);
+      return null;
+    }
+  }, []);
 
-  // Restore note from archive/Восстановление заметки из архива
-  const restoreNote = (id: string): void => {
-    updateNote(id, { isArchived: false });
-  };
-
-  // Permanently delete note/Окончательное удаление заметки
-  const permanentlyDeleteNote = (id: string): void => {
-    deleteNote(id);
-  };
-
-  // Get note by ID/Получение заметки по ID
-  const getNoteById = (id: string): Note | undefined => {
-    return allNotes.find(note => note.id === id);
-  };
-
-  // Get all folders/Получение всех папок
-  const folders = useMemo(() => {
-    const folderMap = new Map<string, { id: string; name: string; count: number }>();
-    
-    allNotes.forEach(note => {
-      if (note.folderId && !note.isArchived) {
-        const existing = folderMap.get(note.folderId);
-        if (existing) {
-          existing.count++;
-        } else {
-          folderMap.set(note.folderId, {
-            id: note.folderId,
-            name: note.folderId, // В будущем можно добавить mapping названий
-            count: 1
-          });
-        }
-      }
-    });
-    
-    return Array.from(folderMap.values());
-  }, [allNotes]);
-
-  // Get all tags/Получение всех тегов
-  const tags = useMemo(() => {
-    const tagMap = new Map<string, number>();
-    
-    allNotes.forEach(note => {
-      if (!note.isArchived) {
-        note.tags.forEach(tag => {
-          tagMap.set(tag, (tagMap.get(tag) || 0) + 1);
-        });
-      }
-    });
-    
-    return Array.from(tagMap.entries()).map(([name, count]) => ({
-      name,
-      count
-    })).sort((a, b) => b.count - a.count);
-  }, [allNotes]);
+  // Initialize notes on mount
+  useEffect(() => {
+    reloadNotes();
+  }, [reloadNotes]);
 
   return {
-    // State/Состояние
-    allNotes,
     notes,
-    folders,
-    tags,
-    
-    // Filters/Фильтры
-    searchQuery,
-    selectedFolder,
-    selectedTag,
-    showFavorites,
-    
-    // Filter setters/Сеттеры фильтров
-    setSearchQuery,
-    setSelectedFolder,
-    setSelectedTag,
-    setShowFavorites,
-    
-    // Actions/Действия
-    addNote,
+    isLoading,
+    error,
+    createNote,
     updateNote,
-    deleteNote,
-    toggleFavorite,
-    archiveNote,
-    restoreNote,
-    permanentlyDeleteNote,
+    deleteNote: deleteNoteHandler,
+    archiveNote: archiveNoteHandler,
+    restoreNote: restoreNoteHandler,
+    toggleFavorite: toggleFavoriteHandler,
+    reloadNotes,
+    loadArchivedNotes,
     getNoteById
   };
 };
