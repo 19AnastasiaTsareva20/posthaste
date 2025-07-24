@@ -3,12 +3,21 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { Navigation } from "../Navigation";
 
+// Исправляем React Router Future Flag Warnings
 const renderWithRouter = (
   component: React.ReactElement,
   initialEntries = ["/"],
 ) => {
   return render(
-    <MemoryRouter initialEntries={initialEntries}>{component}</MemoryRouter>,
+    <MemoryRouter 
+      initialEntries={initialEntries}
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true
+      }}
+    >
+      {component}
+    </MemoryRouter>,
   );
 };
 

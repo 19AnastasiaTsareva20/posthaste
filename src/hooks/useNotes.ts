@@ -63,6 +63,7 @@ export const useNotes = () => {
       } catch (err) {
         setError("Failed to create note");
         console.error("Error creating note:", err);
+        // Исправлено: возвращаем null вместо выбрасывания ошибки
         return null;
       }
     },
