@@ -15,7 +15,7 @@ export const Card: React.FC<CardProps> = ({
   variant = "default",
   hover = false,
 }) => {
-  // Размеры отступов / Padding sizes
+  // Размеры отступов
   const paddingClasses = {
     none: "",
     sm: "p-4",
@@ -23,20 +23,20 @@ export const Card: React.FC<CardProps> = ({
     lg: "p-8",
   };
 
-  // Варианты стилей / Style variants
+  // Варианты стилей
   const variants = {
     default:
-      "bg-surface dark:bg-dark-surface border border-border dark:border-dark-border shadow-soft",
-    elevated: "bg-surface dark:bg-dark-surface shadow-large border-0",
+      "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm",
+    elevated: "bg-white dark:bg-gray-800 shadow-lg border-0",
     bordered:
-      "bg-surface dark:bg-dark-surface border-2 border-primary/20 dark:border-night-primary/20 shadow-soft",
+      "bg-white dark:bg-gray-800 border-2 border-blue-500/20 dark:border-blue-400/20 shadow-sm",
     gradient:
-      "bg-gradient-card dark:bg-gradient-card-dark border border-border/50 dark:border-dark-border/50 shadow-medium",
+      "bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-900 border border-gray-200/50 dark:border-gray-700/50 shadow-md",
   };
 
-  // Эффект наведения / Hover effect
+  // Эффект наведения
   const hoverClasses = hover
-    ? "transition-all duration-300 hover:shadow-large hover:-translate-y-1 hover:border-primary/30 dark:hover:border-night-primary/30 cursor-pointer"
+    ? "transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
     : "transition-shadow duration-200";
 
   return (
@@ -46,12 +46,18 @@ export const Card: React.FC<CardProps> = ({
       ${paddingClasses[padding]} 
       ${hoverClasses}
       rounded-xl 
-      backdrop-blur-sm 
-      animate-fade-in 
       ${className}
     `}
     >
       {children}
     </div>
   );
+};
+
+// CardContent компонент для внутреннего содержимого
+export const CardContent: React.FC<{ 
+  children: React.ReactNode; 
+  className?: string 
+}> = ({ children, className = "" }) => {
+  return <div className={className}>{children}</div>;
 };

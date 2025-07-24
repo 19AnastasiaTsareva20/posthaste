@@ -3,7 +3,6 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { Navigation } from "../Navigation";
 
-// Исправляем React Router Future Flag Warnings
 const renderWithRouter = (
   component: React.ReactElement,
   initialEntries = ["/"],

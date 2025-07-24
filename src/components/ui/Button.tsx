@@ -23,29 +23,29 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props
 }) => {
-  // Базовые классы / Base classes
+  // Базовые классы
   const baseClasses =
     "inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95";
 
-  // Варианты стилей / Style variants
+  // Варианты стилей
   const variants = {
     primary:
-      "bg-primary text-white hover:bg-primary-dark hover:shadow-primary focus:ring-primary/50 dark:bg-night-primary dark:hover:bg-night-accent",
+      "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-md focus:ring-blue-500/50 dark:bg-blue-500 dark:hover:bg-blue-600",
     secondary:
-      "bg-neutral-100 text-neutral-700 hover:bg-neutral-200 hover:shadow-medium focus:ring-neutral-500/50 dark:bg-dark-surface dark:text-dark-text-primary dark:hover:bg-dark-border",
+      "bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-sm focus:ring-gray-500/50 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600",
     success:
-      "bg-success text-white hover:bg-green-600 hover:shadow-lg focus:ring-success/50",
+      "bg-green-600 text-white hover:bg-green-700 hover:shadow-lg focus:ring-green-500/50",
     danger:
-      "bg-danger text-white hover:bg-red-600 hover:shadow-lg focus:ring-danger/50",
+      "bg-red-600 text-white hover:bg-red-700 hover:shadow-lg focus:ring-red-500/50",
     outline:
-      "border-2 border-primary text-primary bg-transparent hover:bg-primary hover:text-white hover:shadow-primary focus:ring-primary/50 dark:border-night-primary dark:text-night-primary dark:hover:bg-night-primary",
+      "border-2 border-blue-600 text-blue-600 bg-transparent hover:bg-blue-600 hover:text-white hover:shadow-md focus:ring-blue-500/50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400",
     ghost:
-      "text-text-primary hover:bg-neutral-100 hover:text-primary focus:ring-primary/30 dark:text-dark-text-primary dark:hover:bg-dark-surface",
+      "text-gray-700 hover:bg-gray-100 focus:ring-gray-500/30 dark:text-gray-300 dark:hover:bg-gray-700",
     gradient:
-      "bg-gradient-primary text-white hover:shadow-large hover:scale-105 focus:ring-primary/50",
+      "bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:shadow-lg hover:from-blue-600 hover:to-indigo-700 focus:ring-blue-500/50",
   };
 
-  // Размеры / Sizes
+  // Размеры
   const sizes = {
     sm: "px-3 py-1.5 text-sm gap-1.5",
     md: "px-4 py-2.5 text-base gap-2",

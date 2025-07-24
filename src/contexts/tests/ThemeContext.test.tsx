@@ -12,6 +12,7 @@ Object.defineProperty(window, "localStorage", {
     getItem: mockGetItem,
     setItem: mockSetItem,
   },
+  writable: true,
 });
 
 // Mock window.matchMedia
@@ -24,8 +25,7 @@ Object.defineProperty(window, "matchMedia", {
 
 // Test component that uses the theme context
 const TestComponent: React.FC = () => {
-  const { theme, toggleTheme, readingMode } = useTheme();
-  // Исправлено: вместо несуществующего isDark используем theme === "dark"
+  const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
   
   return (
@@ -139,6 +139,7 @@ describe("ThemeContext", () => {
 
     const toggleButton = screen.getByTestId("toggle-button");
     await user.click(toggleButton);
+    // Исправлено: правильный ключ для localStorage
     expect(mockSetItem).toHaveBeenCalledWith("posthaste-theme", "dark");
   });
 
@@ -156,6 +157,7 @@ describe("ThemeContext", () => {
       </ThemeProvider>,
     );
 
+    // Исправлено: проверяем правильное применение класса
     expect(document.documentElement.classList.contains("dark")).toBe(true);
   });
 
@@ -238,11 +240,12 @@ describe("ThemeContext", () => {
 
   it("cleans up event listeners on unmount", () => {
     const mockRemoveEventListener = jest.fn();
+    const mockAddEventListener = jest.fn();
 
     mockGetItem.mockReturnValue(null);
     mockMatchMedia.mockReturnValue({
       matches: false,
-      addEventListener: jest.fn(),
+      addEventListener: mockAddEventListener,
       removeEventListener: mockRemoveEventListener,
     });
 
