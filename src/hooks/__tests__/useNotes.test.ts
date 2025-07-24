@@ -36,7 +36,8 @@ describe("useNotes", () => {
     const { result } = renderHook(() => useNotes());
 
     act(() => {
-      result.current.createNote("New Note", "<p>Content</p>", ["tag1"]);
+      const noteId = result.current.createNote("New Note", "<p>Content</p>", ["tag1"]);
+      expect(noteId).toBeTruthy();
     });
 
     expect(mockedNoteStorage.saveNote).toHaveBeenCalledWith(
@@ -55,12 +56,13 @@ describe("useNotes", () => {
     const { result } = renderHook(() => useNotes());
 
     act(() => {
-      result.current.updateNote(
+      const success = result.current.updateNote(
         mockNote.id,
         "Updated Title",
         "<p>Updated content</p>",
         ["updated"],
       );
+      expect(success).toBe(true);
     });
 
     expect(mockedNoteStorage.saveNote).toHaveBeenCalledWith(
@@ -78,7 +80,8 @@ describe("useNotes", () => {
     const { result } = renderHook(() => useNotes());
 
     act(() => {
-      result.current.deleteNote(mockNote.id);
+      const success = result.current.deleteNote(mockNote.id);
+      expect(success).toBe(true);
     });
 
     expect(mockedNoteStorage.deleteNote).toHaveBeenCalledWith(mockNote.id);
@@ -88,7 +91,8 @@ describe("useNotes", () => {
     const { result } = renderHook(() => useNotes());
 
     act(() => {
-      result.current.archiveNote(mockNote.id);
+      const success = result.current.archiveNote(mockNote.id);
+      expect(success).toBe(true);
     });
 
     expect(mockedNoteStorage.archiveNote).toHaveBeenCalledWith(mockNote.id);
@@ -98,7 +102,8 @@ describe("useNotes", () => {
     const { result } = renderHook(() => useNotes());
 
     act(() => {
-      result.current.restoreNote(mockNote.id);
+      const success = result.current.restoreNote(mockNote.id);
+      expect(success).toBe(true);
     });
 
     expect(mockedNoteStorage.restoreNote).toHaveBeenCalledWith(mockNote.id);
@@ -108,7 +113,8 @@ describe("useNotes", () => {
     const { result } = renderHook(() => useNotes());
 
     act(() => {
-      result.current.toggleFavorite(mockNote.id);
+      const success = result.current.toggleFavorite(mockNote.id);
+      expect(success).toBe(true);
     });
 
     expect(mockedNoteStorage.toggleFavorite).toHaveBeenCalledWith(mockNote.id);
@@ -132,23 +138,107 @@ describe("useNotes", () => {
     const { result } = renderHook(() => useNotes());
 
     act(() => {
-      result.current.loadArchivedNotes();
+      const archivedNotes = result.current.loadArchivedNotes();
+      expect(archivedNotes).toEqual([archivedNote]);
     });
 
     expect(mockedNoteStorage.loadNotes).toHaveBeenCalledWith(true);
   });
 
-  it("handles storage errors gracefully", () => {
+  it("handles storage errors gracefully when creating note", () => {
     mockedNoteStorage.saveNote.mockImplementation(() => {
       throw new Error("Storage error");
     });
 
     const { result } = renderHook(() => useNotes());
 
-    expect(() => {
-      act(() => {
-        result.current.createNote("Test", "Content", []);
-      });
-    }).not.toThrow();
+    act(() => {
+      const noteId = result.current.createNote("Test", "Content", []);
+      expect(noteId).toBeNull(); // Should return null on error
+    });
+
+    // Проверяем, что ошибка установлена
+    expect(result.current.error).toBe("Failed to create note");
+  });
+
+  it("handles storage errors gracefully when updating note", () => {
+    mockedNoteStorage.loadNotes.mockReturnValue([mockNote]);
+    mockedNoteStorage.saveNote.mockImplementation(() => {
+      throw new Error("Storage error");
+    });
+
+    const { result } = renderHook(() => useNotes());
+
+    act(() => {
+      const success = result.current.updateNote(mockNote.id, "Title", "Content", []);
+      expect(success).toBe(false); // Should return false on error
+    });
+
+    // Проверяем, что ошибка установлена
+    expect(result.current.error).toBe("Failed to update note");
+  });
+
+  it("handles storage errors gracefully when deleting note", () => {
+    mockedNoteStorage.deleteNote.mockImplementation(() => {
+      throw new Error("Storage error");
+    });
+
+    const { result } = renderHook(() => useNotes());
+
+    act(() => {
+      const success = result.current.deleteNote(mockNote.id);
+      expect(success).toBe(false); // Should return false on error
+    });
+
+    // Проверяем, что ошибка установлена
+    expect(result.current.error).toBe("Failed to delete note");
+  });
+
+  it("handles storage errors gracefully when archiving note", () => {
+    mockedNoteStorage.archiveNote.mockImplementation(() => {
+      throw new Error("Storage error");
+    });
+
+    const { result } = renderHook(() => useNotes());
+
+    act(() => {
+      const success = result.current.archiveNote(mockNote.id);
+      expect(success).toBe(false); // Should return false on error
+    });
+
+    // Проверяем, что ошибка установлена
+    expect(result.current.error).toBe("Failed to archive note");
+  });
+
+  it("handles storage errors gracefully when restoring note", () => {
+    mockedNoteStorage.restoreNote.mockImplementation(() => {
+      throw new Error("Storage error");
+    });
+
+    const { result } = renderHook(() => useNotes());
+
+    act(() => {
+      const success = result.current.restoreNote(mockNote.id);
+      expect(success).toBe(false); // Should return false on error
+    });
+
+    // Проверяем, что ошибка установлена
+    expect(result.current.error).toBe("Failed to restore note");
+  });
+
+  it("handles storage errors gracefully when toggling favorite", () => {
+    mockedNoteStorage.toggleFavorite.mockImplementation(() => {
+      throw new Error("Storage error");
+    });
+
+    const { result } = renderHook(() => useNotes());
+
+    act(() => {
+      const success = result.current.toggleFavorite(mockNote.id);
+      expect(success).toBe(false); // Should return false on error
+    });
+
+    // Проверяем, что ошибка установлена
+    expect(result.current.error).toBe("Failed to toggle favorite");
   });
 });
