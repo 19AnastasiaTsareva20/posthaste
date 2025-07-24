@@ -16,6 +16,7 @@ Object.defineProperty(window, "localStorage", {
 
 // Mock window.matchMedia
 const mockMatchMedia = jest.fn();
+
 Object.defineProperty(window, "matchMedia", {
   writable: true,
   value: mockMatchMedia,
@@ -23,8 +24,10 @@ Object.defineProperty(window, "matchMedia", {
 
 // Test component that uses the theme context
 const TestComponent: React.FC = () => {
-  const { theme, toggleTheme, isDark } = useTheme();
-
+  const { theme, toggleTheme, readingMode } = useTheme();
+  // Исправлено: вместо несуществующего isDark используем theme === "dark"
+  const isDark = theme === "dark";
+  
   return (
     <div>
       <span data-testid="current-theme">{theme}</span>
@@ -76,7 +79,7 @@ describe("ThemeContext", () => {
 
     expect(screen.getByTestId("current-theme")).toHaveTextContent("dark");
     expect(screen.getByTestId("is-dark")).toHaveTextContent("true");
-    expect(mockGetItem).toHaveBeenCalledWith("notesflow-theme");
+    expect(mockGetItem).toHaveBeenCalledWith("posthaste-theme");
   });
 
   it("detects system dark mode preference", () => {
@@ -113,10 +116,8 @@ describe("ThemeContext", () => {
     );
 
     expect(screen.getByTestId("current-theme")).toHaveTextContent("light");
-
     const toggleButton = screen.getByTestId("toggle-button");
     await user.click(toggleButton);
-
     expect(screen.getByTestId("current-theme")).toHaveTextContent("dark");
     expect(screen.getByTestId("is-dark")).toHaveTextContent("true");
   });
@@ -138,8 +139,7 @@ describe("ThemeContext", () => {
 
     const toggleButton = screen.getByTestId("toggle-button");
     await user.click(toggleButton);
-
-    expect(mockSetItem).toHaveBeenCalledWith("notesflow-theme", "dark");
+    expect(mockSetItem).toHaveBeenCalledWith("posthaste-theme", "dark");
   });
 
   it("applies theme class to document.documentElement", () => {
@@ -184,6 +184,7 @@ describe("ThemeContext", () => {
 
   it("listens to system theme changes", () => {
     const mockAddEventListener = jest.fn();
+
     mockGetItem.mockReturnValue(null);
     mockMatchMedia.mockReturnValue({
       matches: false,
@@ -237,6 +238,7 @@ describe("ThemeContext", () => {
 
   it("cleans up event listeners on unmount", () => {
     const mockRemoveEventListener = jest.fn();
+
     mockGetItem.mockReturnValue(null);
     mockMatchMedia.mockReturnValue({
       matches: false,
@@ -290,8 +292,7 @@ describe("ThemeContext", () => {
     // User manually switches to light
     const toggleButton = screen.getByTestId("toggle-button");
     await user.click(toggleButton);
-
     expect(screen.getByTestId("current-theme")).toHaveTextContent("light");
-    expect(mockSetItem).toHaveBeenCalledWith("notesflow-theme", "light");
+    expect(mockSetItem).toHaveBeenCalledWith("posthaste-theme", "light");
   });
 });
