@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Card, Button } from './';
+import React, { useState, useEffect } from "react";
+import { Card, Button } from "./";
 
 interface AdminStats {
   totalArticles: number;
@@ -22,19 +22,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
     privateArticles: 0,
     totalFiles: 0,
     totalTodos: 0,
-    completedTodos: 0
+    completedTodos: 0,
   });
 
   const [isDevMode, setIsDevMode] = useState(() => {
-    return localStorage.getItem('posthaste-dev-mode') === 'true';
+    return localStorage.getItem("posthaste-dev-mode") === "true";
   });
 
   // Загрузка статистики/Load statistics
   useEffect(() => {
     if (isOpen) {
-      const articles = JSON.parse(localStorage.getItem('posthaste-articles') || '[]');
-      const files = JSON.parse(localStorage.getItem('posthaste-uploaded-files') || '[]');
-      const todos = JSON.parse(localStorage.getItem('posthaste-todos') || '[]');
+      const articles = JSON.parse(
+        localStorage.getItem("posthaste-articles") || "[]",
+      );
+      const files = JSON.parse(
+        localStorage.getItem("posthaste-uploaded-files") || "[]",
+      );
+      const todos = JSON.parse(localStorage.getItem("posthaste-todos") || "[]");
 
       setStats({
         totalArticles: articles.length,
@@ -42,7 +46,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
         privateArticles: articles.filter((a: any) => !a.isPublic).length,
         totalFiles: files.length,
         totalTodos: todos.length,
-        completedTodos: todos.filter((t: any) => t.completed).length
+        completedTodos: todos.filter((t: any) => t.completed).length,
       });
     }
   }, [isOpen]);
@@ -50,37 +54,41 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
   const toggleDevMode = () => {
     const newMode = !isDevMode;
     setIsDevMode(newMode);
-    localStorage.setItem('posthaste-dev-mode', newMode.toString());
+    localStorage.setItem("posthaste-dev-mode", newMode.toString());
   };
 
   const clearAllData = () => {
-    if (window.confirm('Очистить ВСЕ данные? Это действие нельзя отменить!')) {
-      localStorage.removeItem('posthaste-articles');
-      localStorage.removeItem('posthaste-uploaded-files');
-      localStorage.removeItem('posthaste-todos');
-      localStorage.removeItem('posthaste-has-visited');
-      alert('Все данные очищены!');
+    if (window.confirm("Очистить ВСЕ данные? Это действие нельзя отменить!")) {
+      localStorage.removeItem("posthaste-articles");
+      localStorage.removeItem("posthaste-uploaded-files");
+      localStorage.removeItem("posthaste-todos");
+      localStorage.removeItem("posthaste-has-visited");
+      alert("Все данные очищены!");
       window.location.reload();
     }
   };
 
   const exportData = () => {
     const data = {
-      articles: JSON.parse(localStorage.getItem('posthaste-articles') || '[]'),
-      files: JSON.parse(localStorage.getItem('posthaste-uploaded-files') || '[]'),
-      todos: JSON.parse(localStorage.getItem('posthaste-todos') || '[]'),
+      articles: JSON.parse(localStorage.getItem("posthaste-articles") || "[]"),
+      files: JSON.parse(
+        localStorage.getItem("posthaste-uploaded-files") || "[]",
+      ),
+      todos: JSON.parse(localStorage.getItem("posthaste-todos") || "[]"),
       settings: {
-        theme: localStorage.getItem('posthaste-theme'),
-        hasVisited: localStorage.getItem('posthaste-has-visited'),
-        devMode: localStorage.getItem('posthaste-dev-mode')
-      }
+        theme: localStorage.getItem("posthaste-theme"),
+        hasVisited: localStorage.getItem("posthaste-has-visited"),
+        devMode: localStorage.getItem("posthaste-dev-mode"),
+      },
     };
 
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `posthaste-backup-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `posthaste-backup-${new Date().toISOString().split("T")[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -132,7 +140,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
           <div className="bg-primary rounded-lg p-4 text-white">
             <h3 className="font-semibold mb-2">Система</h3>
             <div className="space-y-1 text-sm">
-              <div>Режим разработчика: {isDevMode ? 'Вкл' : 'Выкл'}</div>
+              <div>Режим разработчика: {isDevMode ? "Вкл" : "Выкл"}</div>
               <div>Версия: 1.0.0-beta</div>
             </div>
           </div>
@@ -147,18 +155,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
             <div className="flex items-center justify-between">
               <span>Режим разработчика</span>
               <Button
-                variant={isDevMode ? 'success' : 'outline'}
+                variant={isDevMode ? "success" : "outline"}
                 size="sm"
                 onClick={toggleDevMode}
               >
-                {isDevMode ? 'Включён' : 'Выключен'}
+                {isDevMode ? "Включён" : "Выключен"}
               </Button>
             </div>
-            
+
             {isDevMode && (
               <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded p-3">
                 <p className="text-yellow-800 dark:text-yellow-200 text-sm">
-                  Режим разработчика активен. Дополнительная отладочная информация доступна в консоли браузера.
+                  Режим разработчика активен. Дополнительная отладочная
+                  информация доступна в консоли браузера.
                 </p>
               </div>
             )}

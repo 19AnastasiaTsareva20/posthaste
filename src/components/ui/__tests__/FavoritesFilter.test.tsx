@@ -1,183 +1,116 @@
-import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { FavoritesFilter } from '../FavoritesFilter';
+import React from "react";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { FavoritesFilter } from "../FavoritesFilter";
 
-describe('FavoritesFilter', () => {
+describe("FavoritesFilter", () => {
   const defaultProps = {
     showFavoritesOnly: false,
-    onChange: jest.fn(),
-    favoritesCount: 5
+    onToggle: jest.fn(),
+    favoritesCount: 5,
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('renders favorites filter button', () => {
+  it("renders favorites filter checkbox", () => {
     render(<FavoritesFilter {...defaultProps} />);
-    
-    expect(screen.getByRole('button', { name: /избранные/i })).toBeInTheDocument();
+
+    expect(
+      screen.getByRole("checkbox", { name: /показать только избранные/i }),
+    ).toBeInTheDocument();
   });
 
-  it('shows favorites count', () => {
+  it("has unchecked state initially", () => {
     render(<FavoritesFilter {...defaultProps} />);
-    
-    expect(screen.getByText('5')).toBeInTheDocument();
+
+    const checkbox = screen.getByRole("checkbox");
+    expect(checkbox).not.toBeChecked();
   });
 
-  it('shows zero count when no favorites', () => {
-    render(<FavoritesFilter {...defaultProps} favoritesCount={0} />);
-    
-    expect(screen.getByText('0')).toBeInTheDocument();
-  });
-
-  it('has inactive state initially', () => {
-    render(<FavoritesFilter {...defaultProps} />);
-    
-    const button = screen.getByRole('button', { name: /избранные/i });
-    expect(button).not.toHaveClass('bg-yellow-100');
-    expect(button).toHaveClass('bg-gray-100');
-  });
-
-  it('has active state when favorites filter is enabled', () => {
+  it("has checked state when showFavoritesOnly is true", () => {
     render(<FavoritesFilter {...defaultProps} showFavoritesOnly={true} />);
-    
-    const button = screen.getByRole('button', { name: /избранные/i });
-    expect(button).toHaveClass('bg-yellow-100');
-    expect(button).not.toHaveClass('bg-gray-100');
+
+    const checkbox = screen.getByRole("checkbox");
+    expect(checkbox).toBeChecked();
   });
 
-  it('calls onChange when clicked', async () => {
+  it("calls onToggle when clicked", async () => {
     const user = userEvent.setup();
     render(<FavoritesFilter {...defaultProps} />);
-    
-    const button = screen.getByRole('button', { name: /избранные/i });
-    await user.click(button);
-    
-    expect(defaultProps.onChange).toHaveBeenCalledWith(true);
+
+    const checkbox = screen.getByRole("checkbox");
+    await user.click(checkbox);
+
+    expect(defaultProps.onToggle).toHaveBeenCalledWith(true);
   });
 
-  it('toggles state when clicked multiple times', async () => {
-    const user = userEvent.setup();
-    const { rerender } = render(<FavoritesFilter {...defaultProps} />);
-    
-    const button = screen.getByRole('button', { name: /избранные/i });
-    await user.click(button);
-    
-    expect(defaultProps.onChange).toHaveBeenCalledWith(true);
-    
-    // Перерендериваем с новым состоянием
-    rerender(<FavoritesFilter {...defaultProps} showFavoritesOnly={true} />);
-    
-    await user.click(button);
-    expect(defaultProps.onChange).toHaveBeenCalledWith(false);
-  });
-
-  it('shows star icon', () => {
-    render(<FavoritesFilter {...defaultProps} />);
-    
-    const starIcon = screen.getByRole('button').querySelector('[data-icon="star"]');
-    expect(starIcon).toBeInTheDocument();
-  });
-
-  it('has proper accessibility attributes', () => {
-    render(<FavoritesFilter {...defaultProps} />);
-    
-    const button = screen.getByRole('button', { name: /избранные/i });
-    expect(button).toHaveAttribute('aria-label');
-    expect(button).toHaveAttribute('title');
-  });
-
-  it('shows correct aria-pressed state', () => {
-    const { rerender } = render(<FavoritesFilter {...defaultProps} />);
-    
-    let button = screen.getByRole('button', { name: /избранные/i });
-    expect(button).toHaveAttribute('aria-pressed', 'false');
-    
-    rerender(<FavoritesFilter {...defaultProps} showFavoritesOnly={true} />);
-    
-    button = screen.getByRole('button', { name: /избранные/i });
-    expect(button).toHaveAttribute('aria-pressed', 'true');
-  });
-
-  it('handles keyboard interaction', async () => {
+  it("toggles state when clicked multiple times", async () => {
     const user = userEvent.setup();
     render(<FavoritesFilter {...defaultProps} />);
-    
-    const button = screen.getByRole('button', { name: /избранные/i });
-    button.focus();
-    
-    expect(button).toHaveFocus();
-    
-    await user.keyboard('{Enter}');
-    expect(defaultProps.onChange).toHaveBeenCalledWith(true);
-    
-    await user.keyboard(' ');
-    expect(defaultProps.onChange).toHaveBeenCalledTimes(2);
+
+    const checkbox = screen.getByRole("checkbox");
+    await user.click(checkbox);
+    expect(defaultProps.onToggle).toHaveBeenCalledWith(true);
+
+    await user.click(checkbox);
+    expect(defaultProps.onToggle).toHaveBeenCalledWith(false);
   });
 
-  it('shows tooltip on hover', async () => {
+  it("has accessible label", () => {
+    render(<FavoritesFilter {...defaultProps} />);
+
+    const checkbox = screen.getByRole("checkbox");
+    expect(checkbox).toHaveAccessibleName();
+    expect(checkbox.closest("label")).toHaveTextContent(
+      "Показать только избранные",
+    );
+  });
+
+  it("handles keyboard interaction", async () => {
     const user = userEvent.setup();
     render(<FavoritesFilter {...defaultProps} />);
-    
-    const button = screen.getByRole('button', { name: /избранные/i });
-    await user.hover(button);
-    
-    expect(screen.getByText(/показать только избранные/i)).toBeInTheDocument();
+
+    const checkbox = screen.getByRole("checkbox");
+    checkbox.focus();
+
+    expect(checkbox).toHaveFocus();
+
+    await user.keyboard(" ");
+    expect(defaultProps.onToggle).toHaveBeenCalledWith(true);
   });
 
-  it('updates tooltip text when active', async () => {
-    const user = userEvent.setup();
-    render(<FavoritesFilter {...defaultProps} showFavoritesOnly={true} />);
-    
-    const button = screen.getByRole('button', { name: /избранные/i });
-    await user.hover(button);
-    
-    expect(screen.getByText(/показать все заметки/i)).toBeInTheDocument();
-  });
-
-  it('handles large favorites count', () => {
-    render(<FavoritesFilter {...defaultProps} favoritesCount={999} />);
-    
-    expect(screen.getByText('999')).toBeInTheDocument();
-  });
-
-  it('handles very large favorites count with abbreviation', () => {
-    render(<FavoritesFilter {...defaultProps} favoritesCount={1234} />);
-    
-    expect(screen.getByText('999+')).toBeInTheDocument();
-  });
-
-  it('has smooth transition animations', () => {
-    render(<FavoritesFilter {...defaultProps} />);
-    
-    const button = screen.getByRole('button', { name: /избранные/i });
-    const computedStyle = window.getComputedStyle(button);
-    
-    expect(computedStyle.transition).toContain('background-color');
-    expect(computedStyle.transition).toContain('color');
-  });
-
-  it('maintains focus after state change', async () => {
-    const user = userEvent.setup();
-    const { rerender } = render(<FavoritesFilter {...defaultProps} />);
-    
-    const button = screen.getByRole('button', { name: /избранные/i });
-    button.focus();
-    
-    await user.click(button);
-    
-    // Перерендериваем с новым состоянием
-    rerender(<FavoritesFilter {...defaultProps} showFavoritesOnly={true} />);
-    
-    expect(screen.getByRole('button', { name: /избранные/i })).toHaveFocus();
-  });
-
-  it('works with custom className', () => {
+  it("works with custom className", () => {
     render(<FavoritesFilter {...defaultProps} className="custom-class" />);
-    
-    const button = screen.getByRole('button', { name: /избранные/i });
-    expect(button).toHaveClass('custom-class');
+
+    const container = screen.getByTestId("favorites-filter");
+    expect(container).toHaveClass("custom-class");
+  });
+
+  it("maintains state consistency", () => {
+    const { rerender } = render(
+      <FavoritesFilter {...defaultProps} showFavoritesOnly={false} />,
+    );
+
+    let checkbox = screen.getByRole("checkbox");
+    expect(checkbox).not.toBeChecked();
+
+    rerender(<FavoritesFilter {...defaultProps} showFavoritesOnly={true} />);
+    checkbox = screen.getByRole("checkbox");
+    expect(checkbox).toBeChecked();
+  });
+
+  it("has proper component structure", () => {
+    render(<FavoritesFilter {...defaultProps} />);
+
+    const container = screen.getByTestId("favorites-filter");
+    expect(container).toBeInTheDocument();
+
+    const label = container.querySelector("label");
+    expect(label).toBeInTheDocument();
+
+    const checkbox = label?.querySelector('input[type="checkbox"]');
+    expect(checkbox).toBeInTheDocument();
   });
 });

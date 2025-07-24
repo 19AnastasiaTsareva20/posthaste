@@ -1,37 +1,40 @@
-import React, { useState } from 'react';
-import { Button } from './Button';
-import { Card } from './Card';
+import React, { useState } from "react";
+import { Button } from "./Button";
+import { Card } from "./Card";
 
 interface WelcomeModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) => {
+export const WelcomeModal: React.FC<WelcomeModalProps> = ({
+  isOpen,
+  onClose,
+}) => {
   const [currentStep, setCurrentStep] = useState(0);
-  
+
   // Шаги инструктажа/Tutorial steps
   const steps = [
     {
       title: "Добро пожаловать в PostHaste! 🎉",
       content: "Создавайте и публикуйте статьи легко и быстро.",
-      buttonText: "Далее"
+      buttonText: "Далее",
     },
     {
       title: "Создание контента ✍️",
       content: "Используйте наш редактор для создания красивых статей.",
-      buttonText: "Далее"
+      buttonText: "Далее",
     },
     {
       title: "Публикация 📤",
       content: "Делитесь статьями с друзьями или публикуйте для всех.",
-      buttonText: "Далее"
+      buttonText: "Далее",
     },
     {
       title: "Начнём! 🚀",
       content: "Всё готово! Создайте свою первую статью.",
-      buttonText: "Начать"
-    }
+      buttonText: "Начать",
+    },
   ];
 
   if (!isOpen) return null;
@@ -48,21 +51,23 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) =
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <Card className="max-w-md w-full bg-gradient-accent text-white border-0">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">{steps[currentStep].title}</h2>
+          <h2 className="text-2xl font-bold mb-4">
+            {steps[currentStep].title}
+          </h2>
           <p className="text-white/90 mb-6">{steps[currentStep].content}</p>
-          
+
           {/* Индикатор прогресса/Progress indicator */}
           <div className="flex justify-center gap-2 mb-6">
             {steps.map((_, index) => (
               <div
                 key={index}
                 className={`w-2 h-2 rounded-full ${
-                  index <= currentStep ? 'bg-white' : 'bg-white/30'
+                  index <= currentStep ? "bg-white" : "bg-white/30"
                 }`}
               />
             ))}
           </div>
-          
+
           <div className="flex gap-3 justify-center">
             {currentStep > 0 && (
               <Button
@@ -80,7 +85,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) =
               {steps[currentStep].buttonText}
             </Button>
           </div>
-          
+
           <button
             onClick={onClose}
             className="mt-4 text-white/70 hover:text-white text-sm underline"

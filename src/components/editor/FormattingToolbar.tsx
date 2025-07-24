@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Editor } from '@tiptap/react';
-import { Button, Card } from './';
+import React, { useState } from "react";
+import { Editor } from "@tiptap/react";
+import { Button, Card } from "./";
 
 interface FormattingToolbarProps {
   editor: Editor | null;
@@ -11,10 +11,10 @@ interface FormattingToolbarProps {
 export const FormattingToolbar: React.FC<FormattingToolbarProps> = ({
   editor,
   className = "",
-  compact = false
+  compact = false,
 }) => {
   const [showLinkDialog, setShowLinkDialog] = useState(false);
-  const [linkUrl, setLinkUrl] = useState('');
+  const [linkUrl, setLinkUrl] = useState("");
   const [showColorPicker, setShowColorPicker] = useState(false);
 
   if (!editor) {
@@ -23,8 +23,14 @@ export const FormattingToolbar: React.FC<FormattingToolbarProps> = ({
 
   // Цвета для выделения / Highlight colors
   const highlightColors = [
-    '#FBBF24', '#F59E0B', '#EF4444', '#10B981',
-    '#3B82F6', '#8B5CF6', '#F97316', '#EC4899'
+    "#FBBF24",
+    "#F59E0B",
+    "#EF4444",
+    "#10B981",
+    "#3B82F6",
+    "#8B5CF6",
+    "#F97316",
+    "#EC4899",
   ];
 
   // Добавить ссылку / Add link
@@ -34,13 +40,13 @@ export const FormattingToolbar: React.FC<FormattingToolbarProps> = ({
     } else {
       editor.chain().focus().unsetLink().run();
     }
-    setLinkUrl('');
+    setLinkUrl("");
     setShowLinkDialog(false);
   };
 
   // Добавить изображение / Add image
   const addImage = () => {
-    const url = window.prompt('URL изображения:');
+    const url = window.prompt("URL изображения:");
     if (url) {
       editor.chain().focus().setImage({ src: url }).run();
     }
@@ -48,7 +54,9 @@ export const FormattingToolbar: React.FC<FormattingToolbarProps> = ({
 
   return (
     <Card className={`sticky top-0 z-10 ${className}`} hover={false}>
-      <div className={`flex flex-wrap items-center gap-1 ${compact ? 'p-2' : 'p-3'}`}>
+      <div
+        className={`flex flex-wrap items-center gap-1 ${compact ? "p-2" : "p-3"}`}
+      >
         {/* Заголовки / Headings */}
         <div className="flex items-center gap-1 mr-2">
           <select
@@ -57,14 +65,23 @@ export const FormattingToolbar: React.FC<FormattingToolbarProps> = ({
               if (level === 0) {
                 editor.chain().focus().setParagraph().run();
               } else {
-                editor.chain().focus().toggleHeading({ level: level as any }).run();
+                editor
+                  .chain()
+                  .focus()
+                  .toggleHeading({ level: level as any })
+                  .run();
               }
             }}
             value={
-              editor.isActive('heading', { level: 1 }) ? 1 :
-              editor.isActive('heading', { level: 2 }) ? 2 :
-              editor.isActive('heading', { level: 3 }) ? 3 :
-              editor.isActive('heading', { level: 4 }) ? 4 : 0
+              editor.isActive("heading", { level: 1 })
+                ? 1
+                : editor.isActive("heading", { level: 2 })
+                  ? 2
+                  : editor.isActive("heading", { level: 3 })
+                    ? 3
+                    : editor.isActive("heading", { level: 4 })
+                      ? 4
+                      : 0
             }
             className="text-sm border border-border dark:border-dark-border rounded-md px-2 py-1 bg-surface dark:bg-dark-surface text-text-primary dark:text-dark-text-primary focus:ring-2 focus:ring-primary/50"
           >
@@ -83,9 +100,9 @@ export const FormattingToolbar: React.FC<FormattingToolbarProps> = ({
         <div className="flex items-center gap-1">
           <Button
             size={compact ? "sm" : "default"}
-            variant={editor.isActive('bold') ? "primary" : "ghost"}
+            variant={editor.isActive("bold") ? "primary" : "ghost"}
             onClick={() => editor.chain().focus().toggleBold().run()}
-            className={`p-2 ${compact ? 'h-8 w-8' : 'h-9 w-9'}`}
+            className={`p-2 ${compact ? "h-8 w-8" : "h-9 w-9"}`}
             title="Жирный (Ctrl+B)"
           >
             <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
@@ -95,9 +112,9 @@ export const FormattingToolbar: React.FC<FormattingToolbarProps> = ({
 
           <Button
             size={compact ? "sm" : "default"}
-            variant={editor.isActive('italic') ? "primary" : "ghost"}
+            variant={editor.isActive("italic") ? "primary" : "ghost"}
             onClick={() => editor.chain().focus().toggleItalic().run()}
-            className={`p-2 ${compact ? 'h-8 w-8' : 'h-9 w-9'}`}
+            className={`p-2 ${compact ? "h-8 w-8" : "h-9 w-9"}`}
             title="Курсив (Ctrl+I)"
           >
             <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
@@ -107,9 +124,9 @@ export const FormattingToolbar: React.FC<FormattingToolbarProps> = ({
 
           <Button
             size={compact ? "sm" : "default"}
-            variant={editor.isActive('underline') ? "primary" : "ghost"}
+            variant={editor.isActive("underline") ? "primary" : "ghost"}
             onClick={() => editor.chain().focus().toggleUnderline().run()}
-            className={`p-2 ${compact ? 'h-8 w-8' : 'h-9 w-9'}`}
+            className={`p-2 ${compact ? "h-8 w-8" : "h-9 w-9"}`}
             title="Подчеркнутый (Ctrl+U)"
           >
             <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
@@ -119,9 +136,9 @@ export const FormattingToolbar: React.FC<FormattingToolbarProps> = ({
 
           <Button
             size={compact ? "sm" : "default"}
-            variant={editor.isActive('strike') ? "primary" : "ghost"}
+            variant={editor.isActive("strike") ? "primary" : "ghost"}
             onClick={() => editor.chain().focus().toggleStrike().run()}
-            className={`p-2 ${compact ? 'h-8 w-8' : 'h-9 w-9'}`}
+            className={`p-2 ${compact ? "h-8 w-8" : "h-9 w-9"}`}
             title="Зачеркнутый"
           >
             <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
@@ -137,9 +154,11 @@ export const FormattingToolbar: React.FC<FormattingToolbarProps> = ({
         <div className="flex items-center gap-1">
           <Button
             size={compact ? "sm" : "default"}
-            variant={editor.isActive({ textAlign: 'left' }) ? "primary" : "ghost"}
-            onClick={() => editor.chain().focus().setTextAlign('left').run()}
-            className={`p-2 ${compact ? 'h-8 w-8' : 'h-9 w-9'}`}
+            variant={
+              editor.isActive({ textAlign: "left" }) ? "primary" : "ghost"
+            }
+            onClick={() => editor.chain().focus().setTextAlign("left").run()}
+            className={`p-2 ${compact ? "h-8 w-8" : "h-9 w-9"}`}
             title="По левому краю"
           >
             <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
@@ -149,9 +168,11 @@ export const FormattingToolbar: React.FC<FormattingToolbarProps> = ({
 
           <Button
             size={compact ? "sm" : "default"}
-            variant={editor.isActive({ textAlign: 'center' }) ? "primary" : "ghost"}
-            onClick={() => editor.chain().focus().setTextAlign('center').run()}
-            className={`p-2 ${compact ? 'h-8 w-8' : 'h-9 w-9'}`}
+            variant={
+              editor.isActive({ textAlign: "center" }) ? "primary" : "ghost"
+            }
+            onClick={() => editor.chain().focus().setTextAlign("center").run()}
+            className={`p-2 ${compact ? "h-8 w-8" : "h-9 w-9"}`}
             title="По центру"
           >
             <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
@@ -161,9 +182,11 @@ export const FormattingToolbar: React.FC<FormattingToolbarProps> = ({
 
           <Button
             size={compact ? "sm" : "default"}
-            variant={editor.isActive({ textAlign: 'right' }) ? "primary" : "ghost"}
-            onClick={() => editor.chain().focus().setTextAlign('right').run()}
-            className={`p-2 ${compact ? 'h-8 w-8' : 'h-9 w-9'}`}
+            variant={
+              editor.isActive({ textAlign: "right" }) ? "primary" : "ghost"
+            }
+            onClick={() => editor.chain().focus().setTextAlign("right").run()}
+            className={`p-2 ${compact ? "h-8 w-8" : "h-9 w-9"}`}
             title="По правому краю"
           >
             <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
@@ -179,9 +202,9 @@ export const FormattingToolbar: React.FC<FormattingToolbarProps> = ({
         <div className="flex items-center gap-1">
           <Button
             size={compact ? "sm" : "default"}
-            variant={editor.isActive('bulletList') ? "primary" : "ghost"}
+            variant={editor.isActive("bulletList") ? "primary" : "ghost"}
             onClick={() => editor.chain().focus().toggleBulletList().run()}
-            className={`p-2 ${compact ? 'h-8 w-8' : 'h-9 w-9'}`}
+            className={`p-2 ${compact ? "h-8 w-8" : "h-9 w-9"}`}
             title="Маркированный список"
           >
             <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
@@ -191,9 +214,9 @@ export const FormattingToolbar: React.FC<FormattingToolbarProps> = ({
 
           <Button
             size={compact ? "sm" : "default"}
-            variant={editor.isActive('orderedList') ? "primary" : "ghost"}
+            variant={editor.isActive("orderedList") ? "primary" : "ghost"}
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            className={`p-2 ${compact ? 'h-8 w-8' : 'h-9 w-9'}`}
+            className={`p-2 ${compact ? "h-8 w-8" : "h-9 w-9"}`}
             title="Нумерованный список"
           >
             <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
@@ -211,9 +234,9 @@ export const FormattingToolbar: React.FC<FormattingToolbarProps> = ({
           <div className="relative">
             <Button
               size={compact ? "sm" : "default"}
-              variant={editor.isActive('highlight') ? "primary" : "ghost"}
+              variant={editor.isActive("highlight") ? "primary" : "ghost"}
               onClick={() => setShowColorPicker(!showColorPicker)}
-              className={`p-2 ${compact ? 'h-8 w-8' : 'h-9 w-9'}`}
+              className={`p-2 ${compact ? "h-8 w-8" : "h-9 w-9"}`}
               title="Выделить цветом"
             >
               <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
@@ -254,13 +277,23 @@ export const FormattingToolbar: React.FC<FormattingToolbarProps> = ({
           {/* Ссылка / Link */}
           <Button
             size={compact ? "sm" : "default"}
-            variant={editor.isActive('link') ? "primary" : "ghost"}
+            variant={editor.isActive("link") ? "primary" : "ghost"}
             onClick={() => setShowLinkDialog(true)}
-            className={`p-2 ${compact ? 'h-8 w-8' : 'h-9 w-9'}`}
+            className={`p-2 ${compact ? "h-8 w-8" : "h-9 w-9"}`}
             title="Добавить ссылку (Ctrl+K)"
           >
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+              />
             </svg>
           </Button>
 
@@ -269,24 +302,44 @@ export const FormattingToolbar: React.FC<FormattingToolbarProps> = ({
             size={compact ? "sm" : "default"}
             variant="ghost"
             onClick={addImage}
-            className={`p-2 ${compact ? 'h-8 w-8' : 'h-9 w-9'}`}
+            className={`p-2 ${compact ? "h-8 w-8" : "h-9 w-9"}`}
             title="Добавить изображение"
           >
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
             </svg>
           </Button>
 
           {/* Код / Code */}
           <Button
             size={compact ? "sm" : "default"}
-            variant={editor.isActive('code') ? "primary" : "ghost"}
+            variant={editor.isActive("code") ? "primary" : "ghost"}
             onClick={() => editor.chain().focus().toggleCode().run()}
-            className={`p-2 ${compact ? 'h-8 w-8' : 'h-9 w-9'}`}
+            className={`p-2 ${compact ? "h-8 w-8" : "h-9 w-9"}`}
             title="Код"
           >
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+              />
             </svg>
           </Button>
         </div>
@@ -307,10 +360,10 @@ export const FormattingToolbar: React.FC<FormattingToolbarProps> = ({
                 placeholder="https://example.com"
                 className="input w-full"
                 autoFocus
-                onKeyPress={(e) => e.key === 'Enter' && setLink()}
+                onKeyPress={(e) => e.key === "Enter" && setLink()}
               />
             </div>
-            
+
             <div className="flex gap-2">
               <Button
                 size="sm"
@@ -319,14 +372,14 @@ export const FormattingToolbar: React.FC<FormattingToolbarProps> = ({
                 disabled={!linkUrl.trim()}
                 className="flex-1"
               >
-                {editor.isActive('link') ? 'Обновить' : 'Добавить'}
+                {editor.isActive("link") ? "Обновить" : "Добавить"}
               </Button>
               <Button
                 size="sm"
                 variant="secondary"
                 onClick={() => {
                   setShowLinkDialog(false);
-                  setLinkUrl('');
+                  setLinkUrl("");
                 }}
                 className="flex-1"
               >

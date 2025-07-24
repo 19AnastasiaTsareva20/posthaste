@@ -5,36 +5,39 @@
 /* Базовые CSS переменные для тем / Base CSS variables for themes */
 :root {
   /* Светлая тема / Light theme */
-  --color-background: #FAFBFC;
-  --color-surface: #FFFFFF;
-  --color-text-primary: #1A202C;
-  --color-text-secondary: #4A5568;
+  --color-background: #fafbfc;
+  --color-surface: #ffffff;
+  --color-text-primary: #1a202c;
+  --color-text-secondary: #4a5568;
   --color-text-muted: #718096;
-  --color-border: #E2E8F0;
-  
+  --color-border: #e2e8f0;
+
   /* Ваша любимая палитра / Your favorite palette */
-  --color-primary: #2D9EE0;
-  --color-primary-dark: #091E3A;
-  --color-primary-light: #6DD5ED;
-  --color-accent: #2193B0;
-  
+  --color-primary: #2d9ee0;
+  --color-primary-dark: #091e3a;
+  --color-primary-light: #6dd5ed;
+  --color-accent: #2193b0;
+
   /* Дополнительные цвета / Additional colors */
-  --color-success: #15B9A7;
-  --color-warning: #F59E0B;
-  --color-danger: #EF4444;
-  --color-info: #3B82F6;
-  
+  --color-success: #15b9a7;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #3b82f6;
+
   /* Градиенты / Gradients */
-  --gradient-primary: linear-gradient(135deg, #091E3A 0%, #2D9EE0 100%);
-  --gradient-accent: linear-gradient(135deg, #2193B0 0%, #6DD5ED 100%);
-  --gradient-card: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
-  
+  --gradient-primary: linear-gradient(135deg, #091e3a 0%, #2d9ee0 100%);
+  --gradient-accent: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%);
+  --gradient-card: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+
   /* Тени / Shadows */
-  --shadow-soft: 0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04);
-  --shadow-medium: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-large: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-soft:
+    0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04);
+  --shadow-medium:
+    0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-large:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   --shadow-primary: 0 10px 25px -3px rgba(45, 158, 224, 0.3);
-  
+
   /* Размеры и отступы / Sizes and spacing */
   --border-radius: 0.75rem;
   --border-radius-lg: 1rem;
@@ -44,37 +47,40 @@
 
 /* Темная тема / Dark theme */
 .dark {
-  --color-background: #0F172A;
-  --color-surface: #1E293B;
-  --color-text-primary: #F1F5F9;
-  --color-text-secondary: #CBD5E0;
-  --color-text-muted: #94A3B8;
+  --color-background: #0f172a;
+  --color-surface: #1e293b;
+  --color-text-primary: #f1f5f9;
+  --color-text-secondary: #cbd5e0;
+  --color-text-muted: #94a3b8;
   --color-border: #334155;
-  
+
   /* Ночная цветовая схема / Night color scheme */
-  --color-primary: #3854F2;
-  --color-primary-dark: #0820A6;
-  --color-accent: #576EF2;
-  
+  --color-primary: #3854f2;
+  --color-primary-dark: #0820a6;
+  --color-accent: #576ef2;
+
   /* Темные градиенты / Dark gradients */
-  --gradient-primary: linear-gradient(135deg, #0820A6 0%, #3854F2 100%);
-  --gradient-accent: linear-gradient(135deg, #576EF2 0%, #212940 100%);
-  --gradient-card: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
-  
+  --gradient-primary: linear-gradient(135deg, #0820a6 0%, #3854f2 100%);
+  --gradient-accent: linear-gradient(135deg, #576ef2 0%, #212940 100%);
+  --gradient-card: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+
   /* Темные тени / Dark shadows */
-  --shadow-soft: 0 2px 15px -3px rgba(0, 0, 0, 0.3), 0 10px 20px -2px rgba(0, 0, 0, 0.2);
-  --shadow-medium: 0 10px 25px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
-  --shadow-large: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+  --shadow-soft:
+    0 2px 15px -3px rgba(0, 0, 0, 0.3), 0 10px 20px -2px rgba(0, 0, 0, 0.2);
+  --shadow-medium:
+    0 10px 25px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --shadow-large:
+    0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
   --shadow-primary: 0 10px 25px -3px rgba(56, 84, 242, 0.4);
 }
 
 /* Режим чтения / Reading mode */
 .reading-mode {
-  --color-background: #FFFEF7;
-  --color-surface: #FFFFFF;
-  --color-text-primary: #2D3748;
-  --color-text-secondary: #4A5568;
-  
+  --color-background: #fffef7;
+  --color-surface: #ffffff;
+  --color-text-primary: #2d3748;
+  --color-text-secondary: #4a5568;
+
   /* Улучшенная читаемость / Enhanced readability */
   font-size: 18px;
   line-height: 1.8;
@@ -82,11 +88,11 @@
 }
 
 .dark.reading-mode {
-  --color-background: #1A202C;
-  --color-surface: #2D3748;
-  --color-text-primary: #F7FAFC;
-  --color-text-secondary: #E2E8F0;
-  
+  --color-background: #1a202c;
+  --color-surface: #2d3748;
+  --color-text-primary: #f7fafc;
+  --color-text-secondary: #e2e8f0;
+
   /* Комфорт для глаз в темноте / Eye comfort in dark */
   filter: brightness(0.9);
 }
@@ -103,9 +109,9 @@ html {
 body {
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
+    "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--color-background);
@@ -248,7 +254,12 @@ body {
 
 /* Состояния загрузки / Loading states */
 .loading-shimmer {
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
@@ -276,10 +287,10 @@ body {
     --color-border: #000000;
     --color-text-primary: #000000;
   }
-  
+
   .dark {
-    --color-border: #FFFFFF;
-    --color-text-primary: #FFFFFF;
+    --color-border: #ffffff;
+    --color-text-primary: #ffffff;
   }
 }
 

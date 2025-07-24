@@ -1,14 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Card, Button, RichTextEditor, showNotification } from '../components/ui';
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  Card,
+  Button,
+  RichTextEditor,
+  showNotification,
+} from "../components/ui";
 
 export const CreateArticlePage: React.FC = () => {
   const navigate = useNavigate();
   const { id: editingId } = useParams();
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
   const [tags, setTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState('');
+  const [tagInput, setTagInput] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -19,24 +24,24 @@ export const CreateArticlePage: React.FC = () => {
     if (editingId) {
       setIsLoading(true);
       try {
-        const savedNotes = localStorage.getItem('notesflow-notes');
+        const savedNotes = localStorage.getItem("notesflow-notes");
         if (savedNotes) {
           const notes = JSON.parse(savedNotes);
           const noteToEdit = notes.find((note: any) => note.id === editingId);
-          
+
           if (noteToEdit) {
             setTitle(noteToEdit.title);
             setContent(noteToEdit.content);
             setTags(noteToEdit.tags || []);
           } else {
-            showNotification.error('Заметка не найдена');
-            navigate('/');
+            showNotification.error("Заметка не найдена");
+            navigate("/");
           }
         }
       } catch (error) {
-        console.error('Error loading note:', error);
-        showNotification.error('Ошибка при загрузке заметки');
-        navigate('/');
+        console.error("Error loading note:", error);
+        showNotification.error("Ошибка при загрузке заметки");
+        navigate("/");
       } finally {
         setIsLoading(false);
       }
@@ -50,7 +55,9 @@ export const CreateArticlePage: React.FC = () => {
 
   // Отслеживание изменений для предупреждения о несохраненных данных
   useEffect(() => {
-    setHasUnsavedChanges(title.trim() !== '' || content.trim() !== '' || tags.length > 0);
+    setHasUnsavedChanges(
+      title.trim() !== "" || content.trim() !== "" || tags.length > 0,
+    );
   }, [title, content, tags]);
 
   // Предупреждение при попытке покинуть страницу с несохраненными изменениями
@@ -58,46 +65,46 @@ export const CreateArticlePage: React.FC = () => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (hasUnsavedChanges) {
         e.preventDefault();
-        e.returnValue = '';
+        e.returnValue = "";
       }
     };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [hasUnsavedChanges]);
 
   // Обработка добавления тегов
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ',') {
+    if (e.key === "Enter" || e.key === ",") {
       e.preventDefault();
       const newTag = tagInput.trim().toLowerCase();
-      
+
       if (newTag && !tags.includes(newTag)) {
         setTags([...tags, newTag]);
-        setTagInput('');
+        setTagInput("");
       }
     }
   };
 
   // Удаление тега
   const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
+    setTags(tags.filter((tag) => tag !== tagToRemove));
   };
 
   // Сохранение заметки
   const handleSave = async () => {
     if (!title.trim()) {
-      showNotification.warning('Пожалуйста, введите название заметки');
+      showNotification.warning("Пожалуйста, введите название заметки");
       titleInputRef.current?.focus();
       return;
     }
 
     try {
       setIsSaving(true);
-      
-      const savedNotes = localStorage.getItem('notesflow-notes');
+
+      const savedNotes = localStorage.getItem("notesflow-notes");
       const existingNotes = savedNotes ? JSON.parse(savedNotes) : [];
-      
+
       const noteData = {
         id: editingId || `note-${Date.now()}`,
         title: title.trim(),
@@ -105,35 +112,35 @@ export const CreateArticlePage: React.FC = () => {
         tags,
         isFavorite: false,
         folderId: undefined,
-        createdAt: editingId ? 
-          (existingNotes.find((n: any) => n.id === editingId)?.createdAt || new Date().toISOString()) : 
-          new Date().toISOString(),
+        createdAt: editingId
+          ? existingNotes.find((n: any) => n.id === editingId)?.createdAt ||
+            new Date().toISOString()
+          : new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        isArchived: false
+        isArchived: false,
       };
 
       let updatedNotes;
       if (editingId) {
         updatedNotes = existingNotes.map((note: any) =>
-          note.id === editingId ? noteData : note
+          note.id === editingId ? noteData : note,
         );
-        showNotification.success('Заметка обновлена');
+        showNotification.success("Заметка обновлена");
       } else {
         updatedNotes = [noteData, ...existingNotes];
-        showNotification.success('Заметка создана');
+        showNotification.success("Заметка создана");
       }
 
-      localStorage.setItem('notesflow-notes', JSON.stringify(updatedNotes));
+      localStorage.setItem("notesflow-notes", JSON.stringify(updatedNotes));
       setHasUnsavedChanges(false);
-      
+
       // Небольшая задержка перед переходом для показа уведомления
       setTimeout(() => {
-        navigate('/');
+        navigate("/");
       }, 500);
-      
     } catch (error) {
-      console.error('Error saving note:', error);
-      showNotification.error('Ошибка при сохранении заметки');
+      console.error("Error saving note:", error);
+      showNotification.error("Ошибка при сохранении заметки");
     } finally {
       setIsSaving(false);
     }
@@ -142,23 +149,27 @@ export const CreateArticlePage: React.FC = () => {
   // Выход без сохранения
   const handleCancel = () => {
     if (hasUnsavedChanges) {
-      if (window.confirm('У вас есть несохраненные изменения. Вы уверены, что хотите выйти?')) {
-        navigate('/');
+      if (
+        window.confirm(
+          "У вас есть несохраненные изменения. Вы уверены, что хотите выйти?",
+        )
+      ) {
+        navigate("/");
       }
     } else {
-      navigate('/');
+      navigate("/");
     }
   };
 
   // Горячие клавиши
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.ctrlKey || e.metaKey) {
-      if (e.key === 's') {
+      if (e.key === "s") {
         e.preventDefault();
         handleSave();
       }
     }
-    if (e.key === 'Escape') {
+    if (e.key === "Escape") {
       handleCancel();
     }
   };
@@ -175,7 +186,10 @@ export const CreateArticlePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background dark:bg-dark-background" onKeyDown={handleKeyDown}>
+    <div
+      className="min-h-screen bg-background dark:bg-dark-background"
+      onKeyDown={handleKeyDown}
+    >
       <div className="max-w-4xl mx-auto p-4 space-y-6">
         {/* Шапка с действиями */}
         <Card className="p-4">
@@ -187,12 +201,22 @@ export const CreateArticlePage: React.FC = () => {
                 className="p-2"
                 title="Назад к заметкам"
               >
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                  />
                 </svg>
               </Button>
               <h1 className="text-xl font-semibold text-text-primary dark:text-dark-text-primary">
-                {editingId ? 'Редактирование заметки' : 'Новая заметка'}
+                {editingId ? "Редактирование заметки" : "Новая заметка"}
               </h1>
               {hasUnsavedChanges && (
                 <span className="text-sm text-warning flex items-center gap-1">
@@ -223,8 +247,18 @@ export const CreateArticlePage: React.FC = () => {
                   </>
                 ) : (
                   <>
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12"
+                      />
                     </svg>
                     Сохранить
                   </>
@@ -265,7 +299,7 @@ export const CreateArticlePage: React.FC = () => {
             <label className="block text-sm font-medium text-text-primary dark:text-dark-text-primary mb-2">
               Теги
             </label>
-            
+
             {/* Существующие теги */}
             {tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-3">
@@ -279,8 +313,18 @@ export const CreateArticlePage: React.FC = () => {
                       onClick={() => handleRemoveTag(tag)}
                       className="ml-1 text-primary/70 hover:text-primary dark:text-night-primary/70 dark:hover:text-night-primary"
                     >
-                      <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        className="h-3 w-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                     </button>
                   </span>
@@ -319,13 +363,19 @@ export const CreateArticlePage: React.FC = () => {
         <Card className="p-4 bg-neutral-50 dark:bg-dark-surface">
           <div className="flex items-center gap-4 text-sm text-text-secondary dark:text-dark-text-secondary">
             <span className="flex items-center gap-1">
-              <kbd className="px-2 py-1 bg-white dark:bg-dark-background rounded border text-xs">Ctrl</kbd>
+              <kbd className="px-2 py-1 bg-white dark:bg-dark-background rounded border text-xs">
+                Ctrl
+              </kbd>
               <span>+</span>
-              <kbd className="px-2 py-1 bg-white dark:bg-dark-background rounded border text-xs">S</kbd>
+              <kbd className="px-2 py-1 bg-white dark:bg-dark-background rounded border text-xs">
+                S
+              </kbd>
               <span>— сохранить</span>
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="px-2 py-1 bg-white dark:bg-dark-background rounded border text-xs">Esc</kbd>
+              <kbd className="px-2 py-1 bg-white dark:bg-dark-background rounded border text-xs">
+                Esc
+              </kbd>
               <span>— отмена</span>
             </span>
           </div>

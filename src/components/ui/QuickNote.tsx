@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Card, Button } from './';
+import React, { useState, useRef, useEffect } from "react";
+import { Card, Button } from "./";
 
 interface QuickNoteProps {
   onSave: (note: { title: string; content: string; tags: string[] }) => void;
@@ -12,15 +12,15 @@ export const QuickNote: React.FC<QuickNoteProps> = ({
   onSave,
   className = "",
   placeholder = "Быстрая заметка...",
-  autoFocus = false
+  autoFocus = false,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
   const [tags, setTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState('');
+  const [tagInput, setTagInput] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
 
@@ -34,8 +34,9 @@ export const QuickNote: React.FC<QuickNoteProps> = ({
   // Автоматическое изменение высоты textarea / Auto resize textarea
   useEffect(() => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height =
+        textareaRef.current.scrollHeight + "px";
     }
   }, [content]);
 
@@ -43,20 +44,20 @@ export const QuickNote: React.FC<QuickNoteProps> = ({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ctrl+Enter или Cmd+Enter для сохранения / Ctrl+Enter or Cmd+Enter to save
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && isExpanded) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && isExpanded) {
         e.preventDefault();
         handleSave();
       }
-      
+
       // Escape для отмены / Escape to cancel
-      if (e.key === 'Escape' && isExpanded) {
+      if (e.key === "Escape" && isExpanded) {
         handleCancel();
       }
     };
 
     if (isExpanded) {
-      window.addEventListener('keydown', handleKeyDown);
-      return () => window.removeEventListener('keydown', handleKeyDown);
+      window.addEventListener("keydown", handleKeyDown);
+      return () => window.removeEventListener("keydown", handleKeyDown);
     }
   }, [isExpanded, title, content, tags]);
 
@@ -76,20 +77,20 @@ export const QuickNote: React.FC<QuickNoteProps> = ({
     if (trimmedTag && !tags.includes(trimmedTag)) {
       setTags([...tags, trimmedTag]);
     }
-    setTagInput('');
+    setTagInput("");
   };
 
   // Удаление тега / Remove tag
   const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
+    setTags(tags.filter((tag) => tag !== tagToRemove));
   };
 
   // Обработка ввода тегов / Handle tag input
   const handleTagInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ' ' || e.key === ',') {
+    if (e.key === "Enter" || e.key === " " || e.key === ",") {
       e.preventDefault();
       addTag(tagInput);
-    } else if (e.key === 'Backspace' && tagInput === '' && tags.length > 0) {
+    } else if (e.key === "Backspace" && tagInput === "" && tags.length > 0) {
       removeTag(tags[tags.length - 1]);
     }
   };
@@ -102,22 +103,22 @@ export const QuickNote: React.FC<QuickNoteProps> = ({
     }
 
     setIsSaving(true);
-    
+
     try {
       await onSave({
-        title: title.trim() || 'Быстрая заметка',
+        title: title.trim() || "Быстрая заметка",
         content: content.trim(),
-        tags
+        tags,
       });
-      
+
       // Очистка формы / Clear form
-      setTitle('');
-      setContent('');
+      setTitle("");
+      setContent("");
       setTags([]);
-      setTagInput('');
+      setTagInput("");
       setIsExpanded(false);
     } catch (error) {
-      console.error('Error saving note:', error);
+      console.error("Error saving note:", error);
     } finally {
       setIsSaving(false);
     }
@@ -126,11 +127,15 @@ export const QuickNote: React.FC<QuickNoteProps> = ({
   // Отмена / Cancel
   const handleCancel = () => {
     if (title || content || tags.length > 0) {
-      if (window.confirm('Отменить создание заметки? Несохраненные данные будут потеряны.')) {
-        setTitle('');
-        setContent('');
+      if (
+        window.confirm(
+          "Отменить создание заметки? Несохраненные данные будут потеряны.",
+        )
+      ) {
+        setTitle("");
+        setContent("");
         setTags([]);
-        setTagInput('');
+        setTagInput("");
         setIsExpanded(false);
       }
     } else {
@@ -140,15 +145,31 @@ export const QuickNote: React.FC<QuickNoteProps> = ({
 
   // Получить цвет тега / Get tag color
   const getTagColor = (tagName: string): string => {
-    const savedColors = JSON.parse(localStorage.getItem('notesflow-tag-colors') || '{}');
-    const colors = ['#2D9EE0', '#3854F2', '#576EF2', '#2193B0', '#6DD5ED', '#15B9A7', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
+    const savedColors = JSON.parse(
+      localStorage.getItem("notesflow-tag-colors") || "{}",
+    );
+    const colors = [
+      "#2D9EE0",
+      "#3854F2",
+      "#576EF2",
+      "#2193B0",
+      "#6DD5ED",
+      "#15B9A7",
+      "#F59E0B",
+      "#EF4444",
+      "#8B5CF6",
+      "#06B6D4",
+    ];
     return savedColors[tagName] || colors[tagName.length % colors.length];
   };
 
   return (
-    <Card className={`transition-all duration-300 ${className} ${
-      isExpanded ? 'shadow-large' : 'hover:shadow-medium'
-    }`} hover={!isExpanded}>
+    <Card
+      className={`transition-all duration-300 ${className} ${
+        isExpanded ? "shadow-large" : "hover:shadow-medium"
+      }`}
+      hover={!isExpanded}
+    >
       <div className="space-y-4">
         {/* Компактное состояние / Compact state */}
         {!isExpanded && (
@@ -156,8 +177,18 @@ export const QuickNote: React.FC<QuickNoteProps> = ({
             onClick={handleFocus}
             className="flex items-center gap-3 p-4 cursor-text text-text-muted dark:text-dark-text-muted hover:text-text-primary dark:hover:text-dark-text-primary transition-colors"
           >
-            <svg className="h-5 w-5 text-primary dark:text-night-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            <svg
+              className="h-5 w-5 text-primary dark:text-night-primary"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
             </svg>
             <span>{placeholder}</span>
           </div>
@@ -175,7 +206,7 @@ export const QuickNote: React.FC<QuickNoteProps> = ({
               placeholder="Заголовок заметки (необязательно)"
               className="w-full text-lg font-semibold bg-transparent border-none outline-none text-text-primary dark:text-dark-text-primary placeholder-text-muted dark:placeholder-dark-text-muted"
               onKeyPress={(e) => {
-                if (e.key === 'Enter') {
+                if (e.key === "Enter") {
                   textareaRef.current?.focus();
                 }
               }}
@@ -206,15 +237,25 @@ export const QuickNote: React.FC<QuickNoteProps> = ({
                         onClick={() => removeTag(tag)}
                         className="hover:bg-white/20 rounded-full p-0.5 transition-colors"
                       >
-                        <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        <svg
+                          className="h-3 w-3"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
                         </svg>
                       </button>
                     </span>
                   ))}
                 </div>
               )}
-              
+
               <input
                 type="text"
                 value={tagInput}
@@ -233,7 +274,7 @@ export const QuickNote: React.FC<QuickNoteProps> = ({
                 </kbd>
                 <span>для сохранения</span>
               </div>
-              
+
               <div className="flex gap-2">
                 <Button
                   size="sm"
@@ -256,7 +297,7 @@ export const QuickNote: React.FC<QuickNoteProps> = ({
                       Сохранение...
                     </div>
                   ) : (
-                    'Сохранить'
+                    "Сохранить"
                   )}
                 </Button>
               </div>
@@ -265,7 +306,9 @@ export const QuickNote: React.FC<QuickNoteProps> = ({
             {/* Счетчик символов / Character counter */}
             {content && (
               <div className="text-xs text-text-muted dark:text-dark-text-muted text-right">
-                {content.length} символов, {content.split(' ').filter(word => word.length > 0).length} слов
+                {content.length} символов,{" "}
+                {content.split(" ").filter((word) => word.length > 0).length}{" "}
+                слов
               </div>
             )}
           </div>
