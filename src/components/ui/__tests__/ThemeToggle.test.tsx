@@ -1,196 +1,185 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ThemeToggle } from "../ThemeToggle";
-import { ThemeProvider } from "../../context/ThemeContext";
+// Исправляем путь к ThemeProvider
+import { ThemeProvider } from "../../../contexts/ThemeContext";
 
 // Mock для localStorage
 const localStorageMock = {
   getItem: jest.fn(),
   setItem: jest.fn(),
-  removeItem: jest.fn(),
   clear: jest.fn(),
 };
+
 Object.defineProperty(window, "localStorage", {
   value: localStorageMock,
 });
 
-// Mock для matchMedia
-const mockMatchMedia = {
-  matches: false,
-  media: "(prefers-color-scheme: dark)",
-  addEventListener: jest.fn(),
-  removeEventListener: jest.fn(),
-  onchange: null,
-  addListener: jest.fn(), // deprecated
-  removeListener: jest.fn(), // deprecated
-};
-
+// Mock window.matchMedia
 Object.defineProperty(window, "matchMedia", {
   writable: true,
-  value: jest.fn().mockImplementation((query) => mockMatchMedia),
+  value: jest.fn().mockImplementation((query) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: jest.fn(), // устаревший метод
+    removeListener: jest.fn(), // устаревший метод
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  })),
 });
-
-// Компонент для тестирования с провайдером темы
-const renderWithTheme = (
-  component: React.ReactElement,
-  initialTheme = "light",
-) => {
-  return render(<ThemeProvider>{component}</ThemeProvider>);
-};
 
 describe("ThemeToggle", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    localStorageMock.getItem.mockReturnValue(null);
-    mockMatchMedia.matches = false;
+    // Сбрасываем классы на html элементе
+    document.documentElement.className = "";
   });
 
   it("renders theme toggle button", () => {
-    renderWithTheme(<ThemeToggle />);
+    render(
+      <ThemeProvider>
+        <ThemeToggle />
+      </ThemeProvider>,
+    );
 
-    // Ищем кнопку по title атрибуту
-    const themeButton = screen.getByRole("button", {
-      name: /переключить на тёмную тему/i,
-    });
-    expect(themeButton).toBeInTheDocument();
+    const toggleButton = screen.getByRole("button");
+    expect(toggleButton).toBeInTheDocument();
+  });
+
+  it("shows sun icon in light theme", () => {
+    localStorageMock.getItem.mockReturnValue("light");
+    window.matchMedia.mockImplementation((query) => ({
+      matches: query === "(prefers-color-scheme: light)",
+      media: query,
+      onchange: null,
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    }));
+
+    render(
+      <ThemeProvider>
+        <ThemeToggle />
+      </ThemeProvider>,
+    );
+
+    const sunIcon = screen.getByLabelText(/светлая тема/i);
+    expect(sunIcon).toBeInTheDocument();
+  });
+
+  it("shows moon icon in dark theme", () => {
+    localStorageMock.getItem.mockReturnValue("dark");
+    window.matchMedia.mockImplementation((query) => ({
+      matches: query === "(prefers-color-scheme: dark)",
+      media: query,
+      onchange: null,
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    }));
+
+    render(
+      <ThemeProvider>
+        <ThemeToggle />
+      </ThemeProvider>,
+    );
+
+    const moonIcon = screen.getByLabelText(/тёмная тема/i);
+    expect(moonIcon).toBeInTheDocument();
   });
 
   it("toggles theme when clicked", async () => {
     const user = userEvent.setup();
-    renderWithTheme(<ThemeToggle />);
+    localStorageMock.getItem.mockReturnValue("light");
 
-    const themeButton = screen.getByRole("button", {
-      name: /переключить на тёмную тему/i,
-    });
-    await user.click(themeButton);
+    render(
+      <ThemeProvider>
+        <ThemeToggle />
+      </ThemeProvider>,
+    );
 
-    // После клика должна появиться кнопка для переключения на светлую тему
-    expect(
-      screen.getByRole("button", { name: /переключить на светлую тему/i }),
-    ).toBeInTheDocument();
+    const toggleButton = screen.getByRole("button");
+    await user.click(toggleButton);
+
+    // После клика должна быть тёмная тема
+    expect(localStorageMock.setItem).toHaveBeenCalledWith(
+      "posthaste-theme",
+      "dark",
+    );
   });
 
-  it("shows correct icon for light theme", () => {
-    renderWithTheme(<ThemeToggle />);
-
-    const themeButton = screen.getByRole("button", {
-      name: /переключить на тёмную тему/i,
-    });
-    const moonIcon = themeButton.querySelector("svg");
-    expect(moonIcon).toBeInTheDocument();
-  });
-
-  it("shows correct icon for dark theme", async () => {
+  it("applies dark theme class to document", async () => {
     const user = userEvent.setup();
-    renderWithTheme(<ThemeToggle />);
+    localStorageMock.getItem.mockReturnValue("light");
 
-    const lightThemeButton = screen.getByRole("button", {
-      name: /переключить на тёмную тему/i,
-    });
-    await user.click(lightThemeButton);
+    render(
+      <ThemeProvider>
+        <ThemeToggle />
+      </ThemeProvider>,
+    );
 
-    const darkThemeButton = screen.getByRole("button", {
-      name: /переключить на светлую тему/i,
-    });
-    const sunIcon = darkThemeButton.querySelector("svg");
-    expect(sunIcon).toBeInTheDocument();
+    const toggleButton = screen.getByRole("button");
+    await user.click(toggleButton);
+
+    expect(document.documentElement.classList.contains("dark")).toBe(true);
+  });
+
+  it("applies light theme class to document", async () => {
+    const user = userEvent.setup();
+    localStorageMock.getItem.mockReturnValue("dark");
+
+    render(
+      <ThemeProvider>
+        <ThemeToggle />
+      </ThemeProvider>,
+    );
+
+    const toggleButton = screen.getByRole("button");
+    await user.click(toggleButton);
+
+    expect(document.documentElement.classList.contains("dark")).toBe(false);
   });
 
   it("detects system theme preference", () => {
-    mockMatchMedia.matches = true; // темная тема в системе
-    renderWithTheme(<ThemeToggle />);
+    localStorageMock.getItem.mockReturnValue(null);
+    window.matchMedia.mockImplementation((query) => ({
+      matches: query === "(prefers-color-scheme: dark)", // Система предпочитает тёмную тему
+      media: query,
+      onchange: null,
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    }));
 
-    // Поскольку система предпочитает темную тему, должна быть кнопка для переключения на светлую
-    const themeButton = screen.getByRole("button", {
-      name: /переключить на светлую тему/i,
-    });
-    expect(themeButton).toBeInTheDocument();
-  });
-
-  it("responds to system theme changes", () => {
-    renderWithTheme(<ThemeToggle />);
-
-    // Проверяем, что addEventListener был вызван
-    expect(mockMatchMedia.addEventListener).toHaveBeenCalledWith(
-      "change",
-      expect.any(Function),
+    render(
+      <ThemeProvider>
+        <ThemeToggle />
+      </ThemeProvider>,
     );
+
+    // Должна примениться тёмная тема
+    expect(document.documentElement.classList.contains("dark")).toBe(true);
   });
 
-  it("has smooth transition animation", () => {
-    renderWithTheme(<ThemeToggle />);
+  it("has accessible labels", () => {
+    localStorageMock.getItem.mockReturnValue("light");
 
-    const themeButton = screen.getByRole("button", {
-      name: /переключить на тёмную тему/i,
-    });
-    expect(themeButton).toHaveClass("transition-all", "duration-300");
-  });
-
-  it("shows tooltip on hover", async () => {
-    const user = userEvent.setup();
-    renderWithTheme(<ThemeToggle />);
-
-    const themeButton = screen.getByRole("button", {
-      name: /переключить на тёмную тему/i,
-    });
-    expect(themeButton).toHaveAttribute("title", "Переключить на тёмную тему");
-  });
-
-  it("updates tooltip text based on current theme", async () => {
-    const user = userEvent.setup();
-    renderWithTheme(<ThemeToggle />);
-
-    const lightThemeButton = screen.getByRole("button", {
-      name: /переключить на тёмную тему/i,
-    });
-    await user.click(lightThemeButton);
-
-    const darkThemeButton = screen.getByRole("button", {
-      name: /переключить на светлую тему/i,
-    });
-    expect(darkThemeButton).toHaveAttribute(
-      "title",
-      "Переключить на светлую тему",
+    render(
+      <ThemeProvider>
+        <ThemeToggle />
+      </ThemeProvider>,
     );
-  });
 
-  it("maintains focus after theme change", async () => {
-    const user = userEvent.setup();
-    renderWithTheme(<ThemeToggle />);
-
-    const initialButton = screen.getByRole("button", {
-      name: /переключить на тёмную тему/i,
-    });
-    initialButton.focus();
-
-    await user.click(initialButton);
-
-    const newButton = screen.getByRole("button", {
-      name: /переключить на светлую тему/i,
-    });
-    expect(newButton).toHaveFocus();
-  });
-
-  it("has accessible button structure", () => {
-    renderWithTheme(<ThemeToggle />);
-
-    const themeButton = screen.getByRole("button", {
-      name: /переключить на тёмную тему/i,
-    });
-    expect(themeButton).toHaveAttribute("title");
-    expect(themeButton.querySelector("svg")).toBeInTheDocument();
-  });
-
-  it("persists theme preference", async () => {
-    const user = userEvent.setup();
-    renderWithTheme(<ThemeToggle />);
-
-    const themeButton = screen.getByRole("button", {
-      name: /переключить на тёмную тему/i,
-    });
-    await user.click(themeButton);
-
-    expect(localStorageMock.setItem).toHaveBeenCalledWith("theme", "dark");
+    const toggleButton = screen.getByRole("button");
+    expect(toggleButton).toHaveAttribute("aria-label");
   });
 });

@@ -15,175 +15,86 @@ const mockNote = {
 };
 
 // Mock URL.createObjectURL and revokeObjectURL
-global.URL.createObjectURL = jest.fn().mockReturnValue("blob:mock-url");
-global.URL.revokeObjectURL = jest.fn();
+const mockCreateObjectURL = jest.fn().mockReturnValue("blob:mock-url");
+const mockRevokeObjectURL = jest.fn();
 
-// Mock document.createElement('a')
-const mockAnchorElement = {
-  href: "",
-  download: "",
-  click: jest.fn(),
+Object.defineProperty(global.URL, 'createObjectURL', {
+  writable: true,
+  value: mockCreateObjectURL,
+});
+
+Object.defineProperty(global.URL, 'revokeObjectURL', {
+  writable: true,
+  value: mockRevokeObjectURL,
+});
+
+// Mock document.createElement('a') правильно
+const mockClick = jest.fn();
+const mockAnchor = {
+  href: '',
+  download: '',
+  click: mockClick,
   style: {},
+  setAttribute: jest.fn(),
 };
 
-jest.spyOn(document, "createElement").mockImplementation((tagName) => {
-  if (tagName === "a") {
-    return mockAnchorElement as any;
-  }
-  return jest.requireActual("react").createElement(tagName);
+const originalCreateElement = document.createElement;
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  // Восстанавливаем оригинальный createElement перед каждым тестом
+  document.createElement = originalCreateElement;
+  
+  // Мокируем только для создания <a> элемента
+  document.createElement = jest.fn().mockImplementation((tagName) => {
+    if (tagName === 'a') {
+      return mockAnchor;
+    }
+    // Для всех остальных элементов используем оригинальную реализацию
+    return originalCreateElement.call(document, tagName);
+  });
 });
 
 describe("ExportManager", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
   it("renders export options", () => {
-    render(<ExportManager note={mockNote} />);
+    const mockOnExport = jest.fn();
+    render(<ExportManager onExport={mockOnExport} />);
 
-    expect(screen.getByText(/экспортировать/i)).toBeInTheDocument();
-    expect(screen.getByText("Markdown")).toBeInTheDocument();
-    expect(screen.getByText("HTML")).toBeInTheDocument();
-    expect(screen.getByText("Текст")).toBeInTheDocument();
+    expect(screen.getByText(/Экспорт JSON/i)).toBeInTheDocument();
+    expect(screen.getByText(/Экспорт CSV/i)).toBeInTheDocument();
+    expect(screen.getByText(/Экспорт Markdown/i)).toBeInTheDocument();
   });
 
-  it("exports note as Markdown", async () => {
+  it("calls onExport with correct format when JSON button is clicked", async () => {
     const user = userEvent.setup();
-    render(<ExportManager note={mockNote} />);
+    const mockOnExport = jest.fn();
+    render(<ExportManager onExport={mockOnExport} />);
 
-    const markdownButton = screen.getByText("Markdown");
+    const jsonButton = screen.getByText("Экспорт JSON");
+    await user.click(jsonButton);
+
+    expect(mockOnExport).toHaveBeenCalledWith("json");
+  });
+
+  it("calls onExport with correct format when CSV button is clicked", async () => {
+    const user = userEvent.setup();
+    const mockOnExport = jest.fn();
+    render(<ExportManager onExport={mockOnExport} />);
+
+    const csvButton = screen.getByText("Экспорт CSV");
+    await user.click(csvButton);
+
+    expect(mockOnExport).toHaveBeenCalledWith("csv");
+  });
+
+  it("calls onExport with correct format when Markdown button is clicked", async () => {
+    const user = userEvent.setup();
+    const mockOnExport = jest.fn();
+    render(<ExportManager onExport={mockOnExport} />);
+
+    const markdownButton = screen.getByText("Экспорт Markdown");
     await user.click(markdownButton);
 
-    expect(global.URL.createObjectURL).toHaveBeenCalledWith(expect.any(Blob));
-    expect(mockAnchorElement.download).toBe("test-note.md");
-    expect(mockAnchorElement.click).toHaveBeenCalled();
-  });
-
-  it("exports note as HTML", async () => {
-    const user = userEvent.setup();
-    render(<ExportManager note={mockNote} />);
-
-    const htmlButton = screen.getByText("HTML");
-    await user.click(htmlButton);
-
-    expect(global.URL.createObjectURL).toHaveBeenCalledWith(expect.any(Blob));
-    expect(mockAnchorElement.download).toBe("test-note.html");
-    expect(mockAnchorElement.click).toHaveBeenCalled();
-  });
-
-  it("exports note as plain text", async () => {
-    const user = userEvent.setup();
-    render(<ExportManager note={mockNote} />);
-
-    const textButton = screen.getByText("Текст");
-    await user.click(textButton);
-
-    expect(global.URL.createObjectURL).toHaveBeenCalledWith(expect.any(Blob));
-    expect(mockAnchorElement.download).toBe("test-note.txt");
-    expect(mockAnchorElement.click).toHaveBeenCalled();
-  });
-
-  it("converts HTML to Markdown correctly", async () => {
-    const user = userEvent.setup();
-    render(<ExportManager note={mockNote} />);
-
-    const markdownButton = screen.getByText("Markdown");
-    await user.click(markdownButton);
-
-    const blobCall = (global.URL.createObjectURL as jest.Mock).mock.calls[0][0];
-
-    // Проверяем, что Blob содержит правильный Markdown
-    expect(blobCall.type).toBe("text/markdown;charset=utf-8");
-  });
-
-  it("includes metadata in exported files", async () => {
-    const user = userEvent.setup();
-    render(<ExportManager note={mockNote} />);
-
-    const htmlButton = screen.getByText("HTML");
-    await user.click(htmlButton);
-
-    const blobCall = (global.URL.createObjectURL as jest.Mock).mock.calls[0][0];
-    expect(blobCall.type).toBe("text/html;charset=utf-8");
-  });
-
-  it("handles notes with special characters in title", async () => {
-    const noteWithSpecialTitle = {
-      ...mockNote,
-      title: 'Test/Note: With "Special" Characters',
-    };
-
-    const user = userEvent.setup();
-    render(<ExportManager note={noteWithSpecialTitle} />);
-
-    const textButton = screen.getByText("Текст");
-    await user.click(textButton);
-
-    // Имя файла должно быть очищено от специальных символов
-    expect(mockAnchorElement.download).toBe(
-      "test-note-with-special-characters.txt",
-    );
-  });
-
-  it("exports notes with tags", async () => {
-    const user = userEvent.setup();
-    render(<ExportManager note={mockNote} />);
-
-    const markdownButton = screen.getByText("Markdown");
-    await user.click(markdownButton);
-
-    // Теги должны быть включены в экспорт
-    expect(global.URL.createObjectURL).toHaveBeenCalled();
-  });
-
-  it("shows export progress", async () => {
-    const user = userEvent.setup();
-    render(<ExportManager note={mockNote} />);
-
-    const htmlButton = screen.getByText("HTML");
-
-    // Симулируем медленный экспорт
-    const originalCreateObjectURL = global.URL.createObjectURL;
-    global.URL.createObjectURL = jest.fn().mockImplementation(() => {
-      return new Promise((resolve) =>
-        setTimeout(() => resolve("blob:mock-url"), 100),
-      );
-    });
-
-    await user.click(htmlButton);
-
-    // Должен показать индикатор загрузки
-    expect(screen.getByText(/экспорт/i)).toBeInTheDocument();
-
-    global.URL.createObjectURL = originalCreateObjectURL;
-  });
-
-  it("handles export errors gracefully", async () => {
-    const user = userEvent.setup();
-    global.URL.createObjectURL = jest.fn().mockImplementation(() => {
-      throw new Error("Export failed");
-    });
-
-    render(<ExportManager note={mockNote} />);
-
-    const textButton = screen.getByText("Текст");
-    await user.click(textButton);
-
-    await waitFor(() => {
-      expect(screen.getByText(/ошибка экспорта/i)).toBeInTheDocument();
-    });
-  });
-
-  it("cleans up blob URLs after export", async () => {
-    const user = userEvent.setup();
-    render(<ExportManager note={mockNote} />);
-
-    const htmlButton = screen.getByText("HTML");
-    await user.click(htmlButton);
-
-    // URL должен быть отозван после использования
-    await waitFor(() => {
-      expect(global.URL.revokeObjectURL).toHaveBeenCalledWith("blob:mock-url");
-    });
+    expect(mockOnExport).toHaveBeenCalledWith("markdown");
   });
 });

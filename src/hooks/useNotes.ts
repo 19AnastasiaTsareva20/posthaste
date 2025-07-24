@@ -62,8 +62,10 @@ export const useNotes = () => {
         return newNote.id;
       } catch (err) {
         setError("Failed to create note");
-        console.error("Error creating note:", err);
-        // Исправлено: возвращаем null вместо выбрасывания ошибки
+        // В тестах подавляем console.error чтобы не засорять логи
+        if (process.env.NODE_ENV !== 'test') {
+          console.error("Error creating note:", err);
+        }
         return null;
       }
     },
@@ -94,7 +96,10 @@ export const useNotes = () => {
         return true;
       } catch (err) {
         setError("Failed to update note");
-        console.error("Error updating note:", err);
+        // В тестах подавляем console.error чтобы не засорять логи
+        if (process.env.NODE_ENV !== 'test') {
+          console.error("Error updating note:", err);
+        }
         return false;
       }
     },
@@ -110,7 +115,10 @@ export const useNotes = () => {
         return true;
       } catch (err) {
         setError("Failed to delete note");
-        console.error("Error deleting note:", err);
+        // В тестах подавляем console.error чтобы не засорять логи
+        if (process.env.NODE_ENV !== 'test') {
+          console.error("Error deleting note:", err);
+        }
         return false;
       }
     },
@@ -126,7 +134,10 @@ export const useNotes = () => {
         return true;
       } catch (err) {
         setError("Failed to archive note");
-        console.error("Error archiving note:", err);
+        // В тестах подавляем console.error чтобы не засорять логи
+        if (process.env.NODE_ENV !== 'test') {
+          console.error("Error archiving note:", err);
+        }
         return false;
       }
     },
@@ -142,7 +153,10 @@ export const useNotes = () => {
         return true;
       } catch (err) {
         setError("Failed to restore note");
-        console.error("Error restoring note:", err);
+        // В тестах подавляем console.error чтобы не засорять логи
+        if (process.env.NODE_ENV !== 'test') {
+          console.error("Error restoring note:", err);
+        }
         return false;
       }
     },
@@ -158,7 +172,10 @@ export const useNotes = () => {
         return true;
       } catch (err) {
         setError("Failed to toggle favorite");
-        console.error("Error toggling favorite:", err);
+        // В тестах подавляем console.error чтобы не засорять логи
+        if (process.env.NODE_ENV !== 'test') {
+          console.error("Error toggling favorite:", err);
+        }
         return false;
       }
     },
