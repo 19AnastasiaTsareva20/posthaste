@@ -15,7 +15,6 @@ export const Card: React.FC<CardProps> = ({
   variant = "default",
   hover = false,
 }) => {
-  // Размеры отступов
   const paddingClasses = {
     none: "",
     sm: "p-4",
@@ -23,7 +22,6 @@ export const Card: React.FC<CardProps> = ({
     lg: "p-8",
   };
 
-  // Варианты стилей
   const variants = {
     default:
       "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm",
@@ -34,30 +32,23 @@ export const Card: React.FC<CardProps> = ({
       "bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-900 border border-gray-200/50 dark:border-gray-700/50 shadow-md",
   };
 
-  // Эффект наведения
   const hoverClasses = hover
     ? "transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
     : "transition-shadow duration-200";
 
   return (
     <div
-      className={`
-      ${variants[variant]} 
-      ${paddingClasses[padding]} 
-      ${hoverClasses}
-      rounded-xl 
-      ${className}
-    `}
+      className={`${variants[variant]} ${paddingClasses[padding]} ${hoverClasses} rounded-xl ${className}`}
     >
       {children}
     </div>
   );
 };
 
-// CardContent компонент для внутреннего содержимого
-export const CardContent: React.FC<{ 
-  children: React.ReactNode; 
-  className?: string 
-}> = ({ children, className = "" }) => {
+// CardContent для внутреннего содержимого, если нужно
+export const CardContent: React.FC<{ children: React.ReactNode; className?: string }> = ({
+  children,
+  className = "",
+}) => {
   return <div className={className}>{children}</div>;
 };

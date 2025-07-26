@@ -23,11 +23,9 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props
 }) => {
-  // Базовые классы
   const baseClasses =
     "inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95";
 
-  // Варианты стилей
   const variants = {
     primary:
       "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-md focus:ring-blue-500/50 dark:bg-blue-500 dark:hover:bg-blue-600",
@@ -45,7 +43,6 @@ export const Button: React.FC<ButtonProps> = ({
       "bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:shadow-lg hover:from-blue-600 hover:to-indigo-700 focus:ring-blue-500/50",
   };
 
-  // Размеры
   const sizes = {
     sm: "px-3 py-1.5 text-sm gap-1.5",
     md: "px-4 py-2.5 text-base gap-2",

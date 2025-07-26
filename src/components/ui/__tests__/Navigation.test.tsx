@@ -3,11 +3,13 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { Navigation } from "../Navigation";
 
+// Обернуть рендер в MemoryRouter с future пропсами для устранения предупреждений
 const renderWithRouter = (
   component: React.ReactElement,
   initialEntries = ["/"],
 ) => {
   return render(
+    // Добавлены future пропсы для подавления предупреждений React Router v6
     <MemoryRouter 
       initialEntries={initialEntries}
       future={{
@@ -34,12 +36,15 @@ describe("Navigation", () => {
 
     const nav = screen.getByRole("navigation");
     expect(nav).toBeInTheDocument();
-    expect(nav).toHaveClass("hidden", "md:block");
+    // Уточнить селекторы в зависимости от реальной разметки Navigation
+    // Этот тест может потребовать адаптации
+    expect(nav).toHaveClass("hidden", "md:block"); 
   });
 
   it("shows mobile navigation menu", () => {
     renderWithRouter(<Navigation />);
 
+    // Уточнить селектор в зависимости от реальной разметки Navigation
     const mobileNavContainer = document.querySelector(".md\\:hidden");
     expect(mobileNavContainer).toBeInTheDocument();
   });
@@ -47,7 +52,7 @@ describe("Navigation", () => {
   it("has proper button structure in desktop view", () => {
     renderWithRouter(<Navigation />);
 
-    // Проверяем наличие кнопок через селекторы классов
+    // Уточнить селекторы в зависимости от реальной разметки Navigation
     const buttonContainer = document.querySelector(".flex.flex-col.gap-1");
     expect(buttonContainer).toBeInTheDocument();
 
