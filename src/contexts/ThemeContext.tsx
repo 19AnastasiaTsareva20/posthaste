@@ -19,45 +19,53 @@ export const useTheme = () => {
   return context;
 };
 
+// Безопасное определение системной темы
+const getSystemTheme = (): Theme => {
+  if (typeof window !== 'undefined' && window.matchMedia) {
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+  return "light";
+};
+
 interface ThemeProviderProps {
   children: React.ReactNode;
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  // Инициализация темы/Theme initialization
   const [theme, setTheme] = useState<Theme>(() => {
     const savedTheme = localStorage.getItem("posthaste-theme");
     if (savedTheme === "light" || savedTheme === "dark") {
       return savedTheme;
     }
-    // Автоопределение системной темы/Auto-detect system theme
-    return window.matchMedia("(prefers-color-scheme: dark)").matches
-      ? "dark"
-      : "light";
+    return getSystemTheme();
   });
 
-  // Режим чтения/Reading mode
   const [readingMode, setReadingMode] = useState(() => {
-    return localStorage.getItem("posthaste-reading-mode") === "true";
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem("posthaste-reading-mode") === "true";
+    }
+    return false;
   });
 
-  // Применение темы/Apply theme
   useEffect(() => {
-    localStorage.setItem("posthaste-theme", theme);
-    if (theme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
+    if (typeof window !== 'undefined') {
+      localStorage.setItem("posthaste-theme", theme);
+      if (theme === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
     }
   }, [theme]);
 
-  // Применение режима чтения/Apply reading mode
   useEffect(() => {
-    localStorage.setItem("posthaste-reading-mode", readingMode.toString());
-    if (readingMode) {
-      document.body.classList.add("reading-mode");
-    } else {
-      document.body.classList.remove("reading-mode");
+    if (typeof window !== 'undefined') {
+      localStorage.setItem("posthaste-reading-mode", readingMode.toString());
+      if (readingMode) {
+        document.body.classList.add("reading-mode");
+      } else {
+        document.body.classList.remove("reading-mode");
+      }
     }
   }, [readingMode]);
 

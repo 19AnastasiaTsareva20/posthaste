@@ -1,5 +1,5 @@
-import React from "react";
-import { useTheme } from "../../contexts/ThemeContext";
+ыimport React from "react";
+import { useTheme } from "../../../contexts/ThemeContext"; // Убедитесь в правильности пути
 
 export const ThemeToggle: React.FC = () => {
   const { theme, toggleTheme, readingMode, toggleReadingMode } = useTheme();
@@ -10,6 +10,12 @@ export const ThemeToggle: React.FC = () => {
       <button
         onClick={toggleTheme}
         className="p-3 rounded-xl bg-surface/80 dark:bg-dark-surface/80 backdrop-blur-sm border border-border/50 dark:border-dark-border/50 hover:bg-gradient-primary hover:text-white hover:border-transparent hover:shadow-primary transition-all duration-300 group"
+        // Уникальный aria-label для каждой темы
+        aria-label={
+          theme === "light"
+            ? "Переключить на тёмную тему"
+            : "Переключить на светлую тему"
+        }
         title={
           theme === "light"
             ? "Переключить на тёмную тему"
@@ -49,7 +55,17 @@ export const ThemeToggle: React.FC = () => {
             ? "bg-gradient-accent text-white border-transparent shadow-accent"
             : "bg-surface/80 dark:bg-dark-surface/80 border-border/50 dark:border-dark-border/50 hover:bg-gradient-accent hover:text-white hover:border-transparent hover:shadow-accent"
         }`}
-        title={readingMode ? "Выключить режим чтения" : "Включить режим чтения"}
+        // Уникальный aria-label для режима чтения
+        aria-label={
+          readingMode 
+            ? "Выключить режим чтения" 
+            : "Включить режим чтения"
+        }
+        title={
+          readingMode 
+            ? "Выключить режим чтения" 
+            : "Включить режим чтения"
+        }
       >
         <svg
           className={`w-5 h-5 transition-colors ${
