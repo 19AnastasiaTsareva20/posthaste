@@ -44,11 +44,3 @@ export const Card: React.FC<CardProps> = ({
     </div>
   );
 };
-
-// CardContent для внутреннего содержимого, если нужно
-export const CardContent: React.FC<{ children: React.ReactNode; className?: string }> = ({
-  children,
-  className = "",
-}) => {
-  return <div className={className}>{children}</div>;
-};
